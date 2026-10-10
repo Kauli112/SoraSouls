@@ -555,6 +555,11 @@ static void mp_tick_inner(u64 chr, float dt, int fresh) {
         int cur = *(volatile int *)(s_addr[cast] + 4), empty;
         float f = s_cure[cast] ? 0.0f : (float)cur / (float)s_max[cast];
         logn("mp: cast, remaining/max ", s_addr[cast], cur, s_max[cast]);
+        /* v86 (in-game v85: after the first spell no line played): the voice goes with the MP tick's own cast detection
+           again (it saw every cast in the log; the separate 10 ms check missed them); lines play from memory (v83),
+           which was the real delay in v82 */
+        logn("voice: cast spell ", s_addr[cast], *(volatile int *)s_addr[cast], 0);
+        sora_voice(*(volatile int *)s_addr[cast]);
         for (i = 0; i < n_s; i++) {
             int v;
             if (i == cast) { s_prev[i] = s_cure[cast] ? 0 : cur; if (s_cure[cast]) *(volatile int *)(s_addr[i] + 4) = 0; continue; }
@@ -1249,7 +1254,7 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v85 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
+    logs("SoraSouls glide v86 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));
@@ -1303,7 +1308,6 @@ static u32 WINAPI worker(void *arg) {
         }
         g_live = 1;
         md_t -= dt;
-        voice_tick(chr, dt);
         if (md_t <= 0) { md_t = 0.1f; mp_tick(chr, 0.1f, md_fresh); drive_tick(chr, md_fresh); hits_tick(chr, 0.1f); party_tick(chr, 0.1f); form_tick(chr); drive_items_tick(); md_fresh = 0; }
         hf_t -= dt;
         if (hf_t <= 0) { hf_t = 0.2f; hud_flags_tick(); }

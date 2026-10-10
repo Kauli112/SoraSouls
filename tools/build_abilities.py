@@ -20,6 +20,8 @@ ID plan (all verified free in vanilla):
 Usage: python build_abilities.py <DSR game dir or staged copy> <mod dir>
 """
 import copy, os, sys
+# v127 ladder test: Quick Run speeds up EVERY animation (also ladder climbing) - SORASOULS_QUICK_RUN overrides it
+QUICK_RUN_SPEED = float(os.environ.get("SORASOULS_QUICK_RUN", "1.10"))
 from soulstruct.containers import Binder
 from soulstruct.darksouls1r.params.gameparambnd import GameParamBND
 from soulstruct.darksouls1r.events import EMEVD
@@ -54,7 +56,7 @@ ABILITIES = [
     # Quick Run v2: real speed – grabityRate (soulstruct "AnimationSpeedMultiplier") IS animation speed, verified
     # in-game 2026-10-04 (1.5 = faster, 0.5/0.25 = slower). Speeds up every animation (run, roll, attacks, casts).
     dict(key="Quick Run", kind="passive", boss_flag=11010902, event=9753, speffect=97503, template=2013,
-         set=dict(SpecialState=0, StatusIcon=-1, AnimationSpeedMultiplier=1.10)),
+         set=dict(SpecialState=0, StatusIcon=-1, AnimationSpeedMultiplier=QUICK_RUN_SPEED)),
     dict(key="Jackpot", kind="ring", boss_flag=2, event=9754, speffect=97504, template=2101, set=dict(),
          ring_id=160, ring_template=122, item_lot=9800000, lot_flag=9759,
          summary="Increases souls absorbed from each kill",
