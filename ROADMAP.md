@@ -374,11 +374,8 @@ User choices: summon ITEM usable anywhere, reusing it dismisses them; prototype 
   - [x] In-game v122: intro video re-encoded with Bink 1 tools; Mod Engine does not redirect it, so it replaces `movww\frpg_title.bik` in the game folder (original kept as `frpg_title.bik.vanilla`; Steam "Verify integrity" also restores it). User report: "Sora texture color looks uneven"
 - [ ] **v123 – Sora part variants** (`tools/sync_part_variants.py`, called by `drive_outfits.py`): only the plain HD_A/BD_A/AM_A/LG_M binders carried the polish fixes. The `_M` copies of Sora and all form outfits (9550–9555) still had the black SORA_n normal map (v59 bug), the shared black specular instead of the per-texture maps (v61), unfitted arms (AM_A_M up to 1.7 m off) and older body/head skinning and normals; LG_F (plain and `_M`) had the black normal map and 8 zero normals. Textures are cached by name, so a stale copy could change how every part is lit. Every `_M` is now the plain binder with the FLVER entry renamed, LG_F = LG_M renamed. Verified: all 60 binders match their reference; the plain binders are unchanged from v122; every normal map is flat (R 132 / G 130). Pushed: 36 changed binders. Not yet confirmed in game
 
-- [ ] **v122** – Sora's textures written from the KH2 artwork as is (drive_outfits.py LINEARIZE False; v1 had Blender's sRGB→linear conversion and looked darker than Donald and Goofy)
-- [ ] **v123** – colour fix: tools/sync_part_variants.py makes every "_M" and LG_F variant of Sora and the form outfits identical to the finished plain parts (they still held pre-v58 data: unfitted arms, black normal map, no specular)
-  - [x] In-game v123: looks right ✔
 - [ ] **v124 – rebuild without Blender + Thunder sound** (2026-10-10, new session; git repo started)
   - tools/rebuild_mod.py rebuilds the mod from vanilla DSR files and the user's KH2 files: 156 of 157 deployed files byte-identical. Sora / forms / Donald / Goofy / Kingdom Key from model recipes (tools/model_recipe.py), the six Keyblades with textures read from the .mdlx files
   - Kingdom Key texture = KH2 artwork (was Blender's darker conversion; user choice "keep the true artwork")
   - Thunder family: AnimationType 19 (Lightning Spear throw, a00_6319/6519) – the thunder sound is played by that animation, not the bullet; with Soul Arrow's animation Thunder was silent
-  - [x] In-game v124: Kingdom Key matches ✔, Thunder sound ✔ ("everything seems good")
+  - [x] In-game v124 (includes v123's part variants): Kingdom Key matches ✔, Thunder sound ✔ ("everything seems good")
