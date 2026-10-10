@@ -122,6 +122,9 @@ def bone_maps(pairs, parents):
 
 NEIGHBOURS = 6
 CROTCH_CM, CROTCH_Y = 7.0, 80.0   # KH2 cm: the joined inner trouser faces
+USE_OWN_SKIN_AT_CROTCH = False     # v126c: off – Roxas's own KH2 cloth weights put right-leg faces on the left
+KNEE_Y = 50.0                      # KH2 cm: above the knees the inner thighs may blend both legs (as a crotch does)
+SHOE_TOP_Y = 25.0                  # KH2 cm: below this (shoes) always one side (in-game v126b: right shoe stretched wide)
 SIDE_CM = 3.0          # KH2 cm from the middle: beyond this, a vertex only follows Sora vertices on its own side
 
 
@@ -173,7 +176,7 @@ def fit_roxas(roxas_fbx, pairs, report=print):
             # never carry left and right weights together)
             sides = np.array([limb_side[j] for j in idx[i]])
             kw = m["W"][i]
-            if abs(p[0]) < CROTCH_CM and p[1] < CROTCH_Y and kw:
+            if USE_OWN_SKIN_AT_CROTCH and abs(p[0]) < CROTCH_CM and SHOE_TOP_Y < p[1] < CROTCH_Y and kw:
                 # inner faces of Roxas's trouser legs, joined to the other leg in his KH2 mesh: his own KH2 skin
                 # (through Sora's bone map) decides, so the cloth between the legs stretches as it does in KH2
                 tot = sum(kw.values())
@@ -186,7 +189,7 @@ def fit_roxas(roxas_fbx, pairs, report=print):
                         dw[n] = dw.get(n, 0.0) + x / tot
                 P[i] = q; Wd.append(dw)
                 continue
-            if (sides > 0).any() and (sides < 0).any():
+            if (sides > 0).any() and (sides < 0).any() and p[1] < KNEE_Y:
                 keep = 1.0 if w[sides > 0].sum() >= w[sides < 0].sum() else -1.0
                 w = np.where(sides == -keep, 0.0, w)
             w = w / w.sum()
@@ -202,9 +205,29 @@ def fit_roxas(roxas_fbx, pairs, report=print):
         pos.append(P); wts.append(Wd)
     return r, pos, wts
 
+BRIDGE_MAX_Y = 0.5   # m: only below the knees (higher up the blended crotch closes the gap)
+
+
+def drop_bridges(d, pos, wts):
+    """In-game v126b: "roxas right leg is wide" – his KH2 trousers are one piece joined between the legs (inner faces
+    and hems). Those triangles have corners on both legs and stretch into a sheet whenever the legs move apart; they sit
+    between the legs, so they are dropped."""
+    def side(w):
+        lw = sum(v for n, v in w.items() if n.startswith("L_")); rw = sum(v for n, v in w.items() if n.startswith("R_"))
+        return 1 if lw > 0.5 else -1 if rw > 0.5 else 0
+    n = 0
+    for m, P, W in zip(d["meshes"], pos, wts):
+        keep = [t for t in m["tris"] if not ({side(W[t[c]]) for c in range(3)} >= {1, -1}
+                                             and max(P[t[c]][1] for c in range(3)) < BRIDGE_MAX_Y)]
+        n += len(m["tris"]) - len(keep)
+        m["tris"] = keep
+    return n
+
+
 def main(roxas_dir, sora_dir, sora_parts, recipes, skel, out, preview=None):
     pairs = sora_pairs(os.path.join(sora_dir, "P_EX100.fbx"), sora_parts, recipes)
     d, pos, wts = fit_roxas(os.path.join(roxas_dir, "P_EX110.fbx"), pairs)
+    print(f"roxas: {drop_bridges(d, pos, wts)} triangles joining the left and right leg dropped")
     allp = np.vstack(pos)
     print(f"roxas: height {allp[:, 1].max():.2f} m, lowest {allp[:, 1].min():.3f} m, width {np.ptp(allp[:, 0]):.2f} m")
     if preview:
