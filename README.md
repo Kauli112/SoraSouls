@@ -28,7 +28,19 @@ This applies to every weapon that can cast: a normal catalyst in the right hand 
 **Building the mod:** run `build_sorasouls.bat`. It finds Dark Souls Remastered through Steam, asks once for the
 Mod Engine 2 folder, your KH2 export folder and your OpenKH `data\kh2` folder, checks every file it needs, builds
 the mod from your own game files (the game folder is only read), checks the result against the tested build and
-installs it (your previous `mod` folder is kept as `mod.backup-<date>`). Then:
+installs it (your previous `mod` folder is kept as `mod.backup-<date>`).
+
+The KH2 export folder holds your own OpenKH Kh2MdlxEditor exports (FBX + PNG), laid out like this:
+
+| Folder | Files |
+|---|---|
+| `sora\` | `P_EX100.fbx`, `Texture0000.png`–`Texture0002.png` |
+| `drive\valor\`, `wisdom\`, `master\`, `final\`, `antiform\` | that form's `Texture0000.png`–`Texture0002.png` |
+| `donald\` | `P_EX020.fbx`, `Texture0000.png`–`Texture0002.png`, `W_EX020.fbx`, `W_EX020_Texture0000.png` |
+| `goofy\` | `P_EX030.fbx`, `Texture0000.png`–`Texture0002.png`, `W_EX030.fbx`, `W_EX030_Texture0000.png` |
+| `keyblade\` | `W_EX010.fbx`, `W_EX010_10/20/30/40/M0/N0.fbx` |
+
+The converter lists anything missing before it changes anything. Then:
 
 1. Install Mod Engine 2 for DSR (the converter fills its `mod` folder). The Steam game files are not
    modified (one exception: the title video, see Known limitations).
