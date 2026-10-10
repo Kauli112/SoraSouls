@@ -618,10 +618,12 @@ def build_text(game, mod):
                                                   for ev, _, _, msg in movement_levels.LEVELS]
     abil += [("Drive Forms", f["name"], f["unlock_event"], -1) for f in drive_forms.FORMS]
     abil += [("Keyblades", "Kingdom Key", 0, -1)] + [("Keyblades", k["name"], k["event"], -1) for k in keyblades.KEYBLADES]
-    hdr = mp_drive.write_hud_header(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dll", "hud_data.h"),
-                                    HUD_MSG_FLAGS, menu_edits["Event_text_.fmg"], abil,
-                                    extra_msgs=({party.DEBUG_FLAG: party.DEBUG_TEXT, **party.DEBUG_STEPS} if party.PARTY_DEBUG else {}))
-    print("wrote", os.path.normpath(hdr))
+    dll_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dll")
+    if os.path.isdir(dll_dir):                     # developer checkout only; the tester package ships the built DLL
+        hdr = mp_drive.write_hud_header(os.path.join(dll_dir, "hud_data.h"),
+                                        HUD_MSG_FLAGS, menu_edits["Event_text_.fmg"], abil,
+                                        extra_msgs=({party.DEBUG_FLAG: party.DEBUG_TEXT, **party.DEBUG_STEPS} if party.PARTY_DEBUG else {}))
+        print("wrote", os.path.normpath(hdr))
     return [edit_fmgs(os.path.join(game, "msg/ENGLISH/item.msgbnd.dcx"),
                       os.path.join(mod, "msg/ENGLISH/item.msgbnd.dcx"), item_edits),
             edit_fmgs(os.path.join(game, "msg/ENGLISH/menu.msgbnd.dcx"),
