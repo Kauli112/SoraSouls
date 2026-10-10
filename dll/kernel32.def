@@ -1,0 +1,15 @@
+LIBRARY kernel32.dll
+EXPORTS
+CreateThread
+Sleep
+GetModuleHandleA
+GetModuleFileNameA
+LoadLibraryA
+GetProcAddress
+VirtualQuery
+QueryPerformanceCounter
+QueryPerformanceFrequency
+CreateFileA
+WriteFile
+DisableThreadLibraryCalls
+GetCurrentProcessId

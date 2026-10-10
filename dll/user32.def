@@ -1,0 +1,24 @@
+LIBRARY user32.dll
+EXPORTS
+GetAsyncKeyState
+GetForegroundWindow
+GetWindowThreadProcessId
+RegisterClassA
+CreateWindowExA
+DefWindowProcA
+SetLayeredWindowAttributes
+SetWindowPos
+ShowWindow
+PeekMessageA
+TranslateMessage
+DispatchMessageA
+GetDC
+ReleaseDC
+GetClientRect
+ClientToScreen
+IsIconic
+FillRect
+GetClassNameA
+IsWindowVisible
+WindowFromPoint
+GetAncestor

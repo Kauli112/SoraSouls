@@ -1,0 +1,28 @@
+# Extracted / converted game assets – never commit or distribute
+work/
+backup/
+*.mdlx
+*.fbx
+*.png
+*.dcx
+*.flver
+*.tpf
+*.bik
+*.msb
+*.7z
+ModEngine2-*/
+
+# Decompiled vanilla DSR event script (reference only, game content)
+data/*.evs.py
+
+# Third-party tools (not ours to redistribute)
+tools/DSR-Gadget/
+
+# Local Python environment and caches
+.venv/
+__pycache__/
+*.pyc
+
+# DLL build outputs
+*.dll
+*.log

@@ -1,0 +1,918 @@
+{
+ "source": "P_EX100.mdlx",
+ "target": "DSR c0000",
+ "bones": {
+  "0": {
+   "dsr": "Pelvis",
+   "via": 0
+  },
+  "1": {
+   "dsr": "Pelvis",
+   "via": 0
+  },
+  "2": {
+   "dsr": "Pelvis",
+   "via": 0
+  },
+  "3": {
+   "dsr": "Pelvis",
+   "via": 0
+  },
+  "4": {
+   "dsr": "Pelvis",
+   "via": 0
+  },
+  "5": {
+   "dsr": "Pelvis",
+   "via": 0
+  },
+  "6": {
+   "dsr": "Pelvis",
+   "via": 0
+  },
+  "7": {
+   "dsr": "Pelvis",
+   "via": 0
+  },
+  "8": {
+   "dsr": "Pelvis",
+   "via": 0
+  },
+  "9": {
+   "dsr": "Pelvis",
+   "via": 0
+  },
+  "10": {
+   "dsr": "L_Thigh",
+   "via": 10
+  },
+  "11": {
+   "dsr": "L_Thigh",
+   "via": 10
+  },
+  "12": {
+   "dsr": "L_Calf",
+   "via": 12
+  },
+  "13": {
+   "dsr": "L_Foot",
+   "via": 13
+  },
+  "14": {
+   "dsr": "L_Foot",
+   "via": 13
+  },
+  "15": {
+   "dsr": "L_Foot",
+   "via": 13
+  },
+  "16": {
+   "dsr": "L_Foot",
+   "via": 13
+  },
+  "17": {
+   "dsr": "L_Toe0",
+   "via": 17
+  },
+  "18": {
+   "dsr": "L_Toe0",
+   "via": 17
+  },
+  "19": {
+   "dsr": "L_Calf",
+   "via": 19
+  },
+  "20": {
+   "dsr": "L_Calf",
+   "via": 19
+  },
+  "21": {
+   "dsr": "L_Calf",
+   "via": 21
+  },
+  "22": {
+   "dsr": "L_Calf",
+   "via": 21
+  },
+  "23": {
+   "dsr": "L_Thigh",
+   "via": 23
+  },
+  "24": {
+   "dsr": "L_Thigh",
+   "via": 23
+  },
+  "25": {
+   "dsr": "L_Thigh",
+   "via": 23
+  },
+  "26": {
+   "dsr": "L_Thigh",
+   "via": 23
+  },
+  "27": {
+   "dsr": "L_Thigh",
+   "via": 23
+  },
+  "28": {
+   "dsr": "L_Thigh",
+   "via": 23
+  },
+  "29": {
+   "dsr": "L_Thigh",
+   "via": 23
+  },
+  "30": {
+   "dsr": "L_Thigh",
+   "via": 23
+  },
+  "31": {
+   "dsr": "L_Thigh",
+   "via": 23
+  },
+  "32": {
+   "dsr": "L_Thigh",
+   "via": 23
+  },
+  "33": {
+   "dsr": "L_Thigh",
+   "via": 23
+  },
+  "34": {
+   "dsr": "L_Thigh",
+   "via": 23
+  },
+  "35": {
+   "dsr": "Pelvis",
+   "via": 0
+  },
+  "36": {
+   "dsr": "Pelvis",
+   "via": 0
+  },
+  "37": {
+   "dsr": "Pelvis",
+   "via": 0
+  },
+  "38": {
+   "dsr": "Pelvis",
+   "via": 0
+  },
+  "39": {
+   "dsr": "R_Thigh",
+   "via": 39
+  },
+  "40": {
+   "dsr": "R_Thigh",
+   "via": 39
+  },
+  "41": {
+   "dsr": "R_Calf",
+   "via": 41
+  },
+  "42": {
+   "dsr": "R_Foot",
+   "via": 42
+  },
+  "43": {
+   "dsr": "R_Foot",
+   "via": 42
+  },
+  "44": {
+   "dsr": "R_Foot",
+   "via": 42
+  },
+  "45": {
+   "dsr": "R_Foot",
+   "via": 42
+  },
+  "46": {
+   "dsr": "R_Toe0",
+   "via": 46
+  },
+  "47": {
+   "dsr": "R_Toe0",
+   "via": 46
+  },
+  "48": {
+   "dsr": "R_Calf",
+   "via": 48
+  },
+  "49": {
+   "dsr": "R_Calf",
+   "via": 48
+  },
+  "50": {
+   "dsr": "R_Calf",
+   "via": 50
+  },
+  "51": {
+   "dsr": "R_Calf",
+   "via": 50
+  },
+  "52": {
+   "dsr": "R_Thigh",
+   "via": 52
+  },
+  "53": {
+   "dsr": "R_Thigh",
+   "via": 52
+  },
+  "54": {
+   "dsr": "R_Thigh",
+   "via": 52
+  },
+  "55": {
+   "dsr": "R_Thigh",
+   "via": 52
+  },
+  "56": {
+   "dsr": "R_Thigh",
+   "via": 52
+  },
+  "57": {
+   "dsr": "R_Thigh",
+   "via": 52
+  },
+  "58": {
+   "dsr": "R_Thigh",
+   "via": 52
+  },
+  "59": {
+   "dsr": "R_Thigh",
+   "via": 52
+  },
+  "60": {
+   "dsr": "R_Thigh",
+   "via": 52
+  },
+  "61": {
+   "dsr": "R_Thigh",
+   "via": 52
+  },
+  "62": {
+   "dsr": "R_Thigh",
+   "via": 52
+  },
+  "63": {
+   "dsr": "R_Thigh",
+   "via": 52
+  },
+  "64": {
+   "dsr": "Spine",
+   "via": 64
+  },
+  "65": {
+   "dsr": "Spine",
+   "via": 64
+  },
+  "66": {
+   "dsr": "Spine",
+   "via": 64
+  },
+  "67": {
+   "dsr": "Spine1",
+   "via": 67
+  },
+  "68": {
+   "dsr": "Spine1",
+   "via": 67
+  },
+  "69": {
+   "dsr": "Spine1",
+   "via": 67
+  },
+  "70": {
+   "dsr": "Spine1",
+   "via": 67
+  },
+  "71": {
+   "dsr": "Spine1",
+   "via": 67
+  },
+  "72": {
+   "dsr": "Spine1",
+   "via": 67
+  },
+  "73": {
+   "dsr": "Spine1",
+   "via": 67
+  },
+  "74": {
+   "dsr": "L_Clavicle",
+   "via": 74
+  },
+  "75": {
+   "dsr": "L_Clavicle",
+   "via": 74
+  },
+  "76": {
+   "dsr": "L_UpperArm",
+   "via": 76
+  },
+  "77": {
+   "dsr": "L_UpperArm",
+   "via": 76
+  },
+  "78": {
+   "dsr": "L_UpperArm",
+   "via": 76
+  },
+  "79": {
+   "dsr": "L_Forearm",
+   "via": 79
+  },
+  "80": {
+   "dsr": "L_Hand",
+   "via": 80
+  },
+  "81": {
+   "dsr": "L_Hand",
+   "via": 80
+  },
+  "82": {
+   "dsr": "L_Hand",
+   "via": 80
+  },
+  "83": {
+   "dsr": "L_Hand",
+   "via": 80
+  },
+  "84": {
+   "dsr": "L_Hand",
+   "via": 80
+  },
+  "85": {
+   "dsr": "L_Hand",
+   "via": 80
+  },
+  "86": {
+   "dsr": "L_Hand",
+   "via": 80
+  },
+  "87": {
+   "dsr": "L_Finger0",
+   "via": 87
+  },
+  "88": {
+   "dsr": "L_Finger0",
+   "via": 87
+  },
+  "89": {
+   "dsr": "L_Finger01",
+   "via": 89
+  },
+  "90": {
+   "dsr": "L_Finger01",
+   "via": 89
+  },
+  "91": {
+   "dsr": "L_Finger02",
+   "via": 91
+  },
+  "92": {
+   "dsr": "L_Finger02",
+   "via": 91
+  },
+  "93": {
+   "dsr": "L_Finger1",
+   "via": 93
+  },
+  "94": {
+   "dsr": "L_Finger1",
+   "via": 93
+  },
+  "95": {
+   "dsr": "L_Finger11",
+   "via": 95
+  },
+  "96": {
+   "dsr": "L_Finger12",
+   "via": 96
+  },
+  "97": {
+   "dsr": "L_Finger2",
+   "via": 97
+  },
+  "98": {
+   "dsr": "L_Finger2",
+   "via": 97
+  },
+  "99": {
+   "dsr": "L_Finger21",
+   "via": 99
+  },
+  "100": {
+   "dsr": "L_Finger22",
+   "via": 100
+  },
+  "101": {
+   "dsr": "L_Finger2",
+   "via": 101
+  },
+  "102": {
+   "dsr": "L_Finger2",
+   "via": 101
+  },
+  "103": {
+   "dsr": "L_Finger21",
+   "via": 103
+  },
+  "104": {
+   "dsr": "L_Finger22",
+   "via": 104
+  },
+  "105": {
+   "dsr": "L_Finger2",
+   "via": 105
+  },
+  "106": {
+   "dsr": "L_Finger2",
+   "via": 105
+  },
+  "107": {
+   "dsr": "L_Finger21",
+   "via": 107
+  },
+  "108": {
+   "dsr": "L_Finger22",
+   "via": 108
+  },
+  "109": {
+   "dsr": "L_UpperArm",
+   "via": 109
+  },
+  "110": {
+   "dsr": "L_UpperArm",
+   "via": 109
+  },
+  "111": {
+   "dsr": "L_UpperArm",
+   "via": 109
+  },
+  "112": {
+   "dsr": "L_UpperArm",
+   "via": 109
+  },
+  "113": {
+   "dsr": "L_UpperArm",
+   "via": 109
+  },
+  "114": {
+   "dsr": "L_UpperArm",
+   "via": 109
+  },
+  "115": {
+   "dsr": "L_UpperArm",
+   "via": 109
+  },
+  "116": {
+   "dsr": "L_Clavicle",
+   "via": 116
+  },
+  "117": {
+   "dsr": "L_Clavicle",
+   "via": 116
+  },
+  "118": {
+   "dsr": "L_Clavicle",
+   "via": 116
+  },
+  "119": {
+   "dsr": "L_Clavicle",
+   "via": 116
+  },
+  "120": {
+   "dsr": "L_Clavicle",
+   "via": 116
+  },
+  "121": {
+   "dsr": "L_Clavicle",
+   "via": 121
+  },
+  "122": {
+   "dsr": "L_Clavicle",
+   "via": 121
+  },
+  "123": {
+   "dsr": "L_Clavicle",
+   "via": 121
+  },
+  "124": {
+   "dsr": "L_Clavicle",
+   "via": 121
+  },
+  "125": {
+   "dsr": "L_Clavicle",
+   "via": 121
+  },
+  "126": {
+   "dsr": "Spine1",
+   "via": 67
+  },
+  "127": {
+   "dsr": "Spine1",
+   "via": 67
+  },
+  "128": {
+   "dsr": "Spine",
+   "via": 128
+  },
+  "129": {
+   "dsr": "Spine",
+   "via": 128
+  },
+  "130": {
+   "dsr": "Spine",
+   "via": 130
+  },
+  "131": {
+   "dsr": "Spine",
+   "via": 130
+  },
+  "132": {
+   "dsr": "Spine",
+   "via": 132
+  },
+  "133": {
+   "dsr": "Spine",
+   "via": 132
+  },
+  "134": {
+   "dsr": "Spine",
+   "via": 134
+  },
+  "135": {
+   "dsr": "Spine",
+   "via": 134
+  },
+  "136": {
+   "dsr": "Neck",
+   "via": 136
+  },
+  "137": {
+   "dsr": "Neck",
+   "via": 136
+  },
+  "138": {
+   "dsr": "Neck",
+   "via": 136
+  },
+  "139": {
+   "dsr": "Neck",
+   "via": 136
+  },
+  "140": {
+   "dsr": "Neck",
+   "via": 136
+  },
+  "141": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "142": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "143": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "144": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "145": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "146": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "147": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "148": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "149": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "150": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "151": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "152": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "153": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "154": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "155": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "156": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "157": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "158": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "159": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "160": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "161": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "162": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "163": {
+   "dsr": "Head",
+   "via": 141
+  },
+  "164": {
+   "dsr": "Spine1",
+   "via": 67
+  },
+  "165": {
+   "dsr": "Spine1",
+   "via": 67
+  },
+  "166": {
+   "dsr": "R_Clavicle",
+   "via": 166
+  },
+  "167": {
+   "dsr": "R_Clavicle",
+   "via": 166
+  },
+  "168": {
+   "dsr": "R_UpperArm",
+   "via": 168
+  },
+  "169": {
+   "dsr": "R_UpperArm",
+   "via": 168
+  },
+  "170": {
+   "dsr": "R_UpperArm",
+   "via": 168
+  },
+  "171": {
+   "dsr": "R_Forearm",
+   "via": 171
+  },
+  "172": {
+   "dsr": "R_Hand",
+   "via": 172
+  },
+  "173": {
+   "dsr": "R_Hand",
+   "via": 172
+  },
+  "174": {
+   "dsr": "R_Hand",
+   "via": 172
+  },
+  "175": {
+   "dsr": "R_Hand",
+   "via": 172
+  },
+  "176": {
+   "dsr": "R_Hand",
+   "via": 172
+  },
+  "177": {
+   "dsr": "R_Hand",
+   "via": 172
+  },
+  "178": {
+   "dsr": "R_Hand",
+   "via": 172
+  },
+  "179": {
+   "dsr": "R_Finger0",
+   "via": 179
+  },
+  "180": {
+   "dsr": "R_Finger0",
+   "via": 179
+  },
+  "181": {
+   "dsr": "R_Finger01",
+   "via": 181
+  },
+  "182": {
+   "dsr": "R_Finger01",
+   "via": 181
+  },
+  "183": {
+   "dsr": "R_Finger02",
+   "via": 183
+  },
+  "184": {
+   "dsr": "R_Finger02",
+   "via": 183
+  },
+  "185": {
+   "dsr": "R_Finger1",
+   "via": 185
+  },
+  "186": {
+   "dsr": "R_Finger1",
+   "via": 185
+  },
+  "187": {
+   "dsr": "R_Finger11",
+   "via": 187
+  },
+  "188": {
+   "dsr": "R_Finger12",
+   "via": 188
+  },
+  "189": {
+   "dsr": "R_Finger2",
+   "via": 189
+  },
+  "190": {
+   "dsr": "R_Finger2",
+   "via": 189
+  },
+  "191": {
+   "dsr": "R_Finger21",
+   "via": 191
+  },
+  "192": {
+   "dsr": "R_Finger22",
+   "via": 192
+  },
+  "193": {
+   "dsr": "R_Finger2",
+   "via": 193
+  },
+  "194": {
+   "dsr": "R_Finger2",
+   "via": 193
+  },
+  "195": {
+   "dsr": "R_Finger21",
+   "via": 195
+  },
+  "196": {
+   "dsr": "R_Finger22",
+   "via": 196
+  },
+  "197": {
+   "dsr": "R_Finger2",
+   "via": 197
+  },
+  "198": {
+   "dsr": "R_Finger2",
+   "via": 197
+  },
+  "199": {
+   "dsr": "R_Finger21",
+   "via": 199
+  },
+  "200": {
+   "dsr": "R_Finger22",
+   "via": 200
+  },
+  "201": {
+   "dsr": "R_UpperArm",
+   "via": 201
+  },
+  "202": {
+   "dsr": "R_UpperArm",
+   "via": 201
+  },
+  "203": {
+   "dsr": "R_UpperArm",
+   "via": 201
+  },
+  "204": {
+   "dsr": "R_UpperArm",
+   "via": 201
+  },
+  "205": {
+   "dsr": "R_UpperArm",
+   "via": 201
+  },
+  "206": {
+   "dsr": "R_UpperArm",
+   "via": 201
+  },
+  "207": {
+   "dsr": "R_UpperArm",
+   "via": 201
+  },
+  "208": {
+   "dsr": "R_Clavicle",
+   "via": 208
+  },
+  "209": {
+   "dsr": "R_Clavicle",
+   "via": 208
+  },
+  "210": {
+   "dsr": "R_Clavicle",
+   "via": 208
+  },
+  "211": {
+   "dsr": "R_Clavicle",
+   "via": 208
+  },
+  "212": {
+   "dsr": "R_Clavicle",
+   "via": 208
+  },
+  "213": {
+   "dsr": "R_Clavicle",
+   "via": 213
+  },
+  "214": {
+   "dsr": "R_Clavicle",
+   "via": 213
+  },
+  "215": {
+   "dsr": "R_Clavicle",
+   "via": 213
+  },
+  "216": {
+   "dsr": "R_Clavicle",
+   "via": 213
+  },
+  "217": {
+   "dsr": "R_Clavicle",
+   "via": 213
+  },
+  "218": {
+   "dsr": "Spine1",
+   "via": 67
+  },
+  "219": {
+   "dsr": "Spine1",
+   "via": 67
+  },
+  "220": {
+   "dsr": "Spine",
+   "via": 220
+  },
+  "221": {
+   "dsr": "Spine",
+   "via": 220
+  },
+  "222": {
+   "dsr": "Spine",
+   "via": 222
+  },
+  "223": {
+   "dsr": "Spine",
+   "via": 222
+  },
+  "224": {
+   "dsr": "Spine",
+   "via": 224
+  },
+  "225": {
+   "dsr": "Spine",
+   "via": 224
+  },
+  "226": {
+   "dsr": "Spine",
+   "via": 226
+  },
+  "227": {
+   "dsr": "Spine",
+   "via": 226
+  }
+ }
+}
