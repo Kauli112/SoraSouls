@@ -421,11 +421,10 @@ MAGIC_EVENTS = {
     "start": '''
 @ContinueOnRest({START_EVENT})
 def Event_{START_EVENT}():
-    """SoraSouls: start kit – Kingdom Key (Magic) + {name}, once per save."""
+    """SoraSouls: start kit – {name}, once per save (v125: the old Kingdom Key (Magic) catalyst is no longer given;
+    the Knight starts with the Kingdom Key itself)."""
     if ThisEventFlagEnabled():
         return
-    if FlagDisabled({OLD_START_EVENT}):
-        AwardItemLot({START_LOT}, host_only=True)
     AwardItemLot({START_LOT_2}, host_only=True)
     DisplayStatus({msg_text})
     EnableFlag({msg_flag})
@@ -485,9 +484,10 @@ def Event_{event}():
 
 
 def magic_evs():
+    # v125 (playtest: "he starts with many items and double of some items"): the Keyblade Focus gift (v1 left-hand
+    # casting experiment) is no longer started; its event stays defined so the event file layout is unchanged
     out, calls = [], [f"    Event_{START_EVENT}()\n", f"    Event_{ATTUNE_EVENT}()\n",
-                      f"    Event_{ATTUNE_MENU_EVENT}()\n", f"    Event_{RESTORE_EVENT}()\n",
-                      f"    Event_{FOCUS_EVENT}()\n"]
+                      f"    Event_{ATTUNE_MENU_EVENT}()\n", f"    Event_{RESTORE_EVENT}()\n"]
     start = next(s for s in SPELLS if s["unlock"] == "start")
     consts = dict(START_EVENT=START_EVENT, ATTUNE_EVENT=ATTUNE_EVENT, START_LOT=START_LOT,
                   START_LOT_2=START_SPELL_LOT, OLD_START_EVENT=OLD_START_EVENT,

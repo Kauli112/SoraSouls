@@ -11,9 +11,9 @@ If the game crashes or acts strangely, also send `mod\sora_glide.log` (in the Mo
 | # | Check | Expected | Result |
 |---|---|---|---|
 | 1.1 | Title screen | "SORA SOULS" logo | |
-| 1.2 | Starting gear | Sora with the Kingdom Key in the right hand, left hand empty | |
+| 1.2 | Starting gear | Sora with the Kingdom Key in the right hand, left hand empty | he starts with many items and double of some items|
 | 1.3 | Starting magic | Fire attuned | |
-| 1.4 | Roll | Fast roll with the starting gear | |
+| 1.4 | Roll | Fast roll with the starting gear |fast roll works |
 
 ## 2. Feel and looks
 | # | Check | Expected | Result |
@@ -44,15 +44,15 @@ If the game crashes or acts strangely, also send `mod\sora_glide.log` (in the Mo
 ## 5. Drive Forms and abilities
 | # | Check | Expected | Result |
 |---|---|---|---|
-| 5.1 | Drive gauge | Fills when Sora lands hits or takes damage; full gauge gives a Drive use back | |
+| 5.1 | Drive gauge | Fills when Sora lands hits or takes damage; full gauge gives a Drive use back | drive gauge shouldnt be visable with no drive forms|
 | 5.2 | Drive Forms | Valor / Wisdom / Master / Final work, outfit changes, uses refill when resting | |
-| 5.3 | HUD messages | "Sora learned …!" and other SoraSouls messages show above the MP / Drive bars and never block attacking or casting | |
+| 5.3 | HUD messages | "Sora learned …!" and other SoraSouls messages show above the MP / Drive bars and never block attacking or casting |the hud shows up during cutscenes and loading screens |
 | 5.4 | Abilities panel | J or hold L3 opens it; learned abilities listed by name | |
 
 ## 6. Keyblades and shop
 | # | Check | Expected | Result |
 |---|---|---|---|
-| 6.1 | Keyblade drops | A Keyblade drops from Bell Gargoyles, Gaping Dragon, Sif, Ornstein & Smough, Four Kings, Seath | |
+| 6.1 | Keyblade drops | A Keyblade drops from Bell Gargoyles, Gaping Dragon, Sif, Ornstein & Smough, Four Kings, Seath | add parry mechanic for keyblade |
 | 6.2 | Keyblade icons and looks | Each has its KH2 icon in the menu and looks right in Sora's hand | |
 | 6.3 | Upgrades | Keyblades upgrade with normal Titanite to +10 | |
 | 6.4 | Moogle shop | Undead Merchant sells Boost rings and Potion / Hi-Potion / Elixir | |
@@ -62,8 +62,11 @@ Use the **Donald & Goofy** item to call them (use it again to send them away).
 
 | # | Check | Expected | Result |
 |---|---|---|---|
-| 7.1 | They follow | They keep up with Sora and fight enemies | |
-| 7.2 | Donald | Casts at enemies with his staff, swings it up close, never punches; sometimes heals Sora | |
+| 7.1 | They follow | They keep up with Sora and fight enemies | they  load in some areas like firelink shrine in weird places and dont teleport closer, when resting at a bonfire they still fight and attack enemies, donald and goofy dont keep up they just get teleported|
+| 7.2 | Donald | Casts at enemies with his staff, swings it up close, never punches; sometimes heals Sora | donalds casts are coming from higher up due to keyblade cast, donalds magic does way to much damage, donald might be using my magic i cant tell not sure  |
 | 7.3 | Goofy | Bashes enemies with his shield and blocks with it | |
-| 7.4 | Not in the way | Walking into one swaps him behind Sora; they never fall through the floor | |
+| 7.4 | Not in the way | Walking into one swaps him behind Sora; they never fall through the floor | still in the way sometimes and sometimes pops them out the way |
 | 7.5 | After loading a save | Quit with them in the party, reload: they appear by themselves within a few seconds | |
+
+## 8. things to add
+When humanity is lost on death sora should look like roxas 

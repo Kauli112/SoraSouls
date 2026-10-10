@@ -31,7 +31,7 @@ TEST_MODELS = {}   # experiment 2 dummy-test models retired (v30)
 HYBRID_A, HYBRID_B = 1311000, 1312000
 HYBRID_LOT_BASE, HYBRID_EVENT = 9800360, 9910
 GOODS_LOT_TEMPLATE = 100000
-GIVE_HYBRIDS = True
+GIVE_HYBRIDS = False   # v125: gave a second Kingdom Key and the Hybrid B test weapon to every new character
 
 SWORD_MOTION_FIELDS = ("AttackAnimationCategory", "BehaviorVariationID", "SpecialAttackCategory")
 SWORD_DAMAGE_FIELDS = ("BasePhysicalDamage", "BaseStaminaDamage", "BasePoiseDamage", "StrengthScaling",
