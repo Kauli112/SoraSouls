@@ -72,6 +72,9 @@ code, params logic, scripts and model recipes plus a converter that builds the m
 games (`CONVERTER_PLAN.md`). Until that converter is finished, the mod is tested only on the developer's PC.
 Online play with modified files is not supported.
 
+SoraSouls's own code (tools, DLL source, scripts) is licensed under the GNU General Public License v3.0 or later –
+see `LICENSE`. Bundled third-party software keeps its own licence (`THIRD_PARTY.txt` in the package).
+
 ## For developers
 Architecture and learned engine facts: `ARCHITECTURE.md`. Converter plan and rebuild status: `CONVERTER_PLAN.md`.
 Tools live in `tools/` and run on Python 3.13 with soulstruct 2.6.0, Pillow, numpy, matplotlib and scikit-image
