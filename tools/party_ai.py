@@ -152,7 +152,7 @@ def patch_all(game, mod, report=print):
                 continue
             assert chk.find_entry_by_id(e.entry_id).get_uncompressed_data() == e.get_uncompressed_data(), (m, e.name)
         for g in missing:
-            e = next(x for x in chk.entries if x.name == src[g]["path"])
+            e = next(x for x in chk.entries if x.path == src[g]["path"])
             assert e.get_uncompressed_data() == src[g]["data"]
         ci = info_read(chk.find_entry_by_id(INFO_ID).get_uncompressed_data())
         assert {g[0] for g in ci} >= set(GOALS) | {6950} and ci[:len(info_read(di))] == info_read(di)

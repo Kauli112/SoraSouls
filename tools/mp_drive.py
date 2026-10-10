@@ -177,7 +177,7 @@ def write_hud_header(path, msg_flags, texts, abilities, extra_msgs=None):
     lines += ["};", f"#define HUD_NMSGS {len(msg_flags) + len(extra_msgs or {})}", "static const HUD_ABIL HUD_ABILS[] = {"]
     lines += [f"    {{ {cats.index(c)}, {_c(n)}, {fa}, {fb} }}," for c, n, fa, fb in abilities]
     lines += ["};", f"#define HUD_NABILS {len(abilities)}", ""]
-    with open(path, "w", encoding="ascii") as f:
+    with open(path, "w", encoding="ascii", newline="\n") as f:
         f.write("\n".join(lines))
     return path
 

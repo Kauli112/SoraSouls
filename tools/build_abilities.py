@@ -229,7 +229,8 @@ KNIGHT_INIT_ROWS = (2001, 3001)
 
 
 def get_param(gp, name):
-    return next(v for k, v in gp.params.items() if k.endswith("\\" + name))
+    # soulstruct 2.6 keys params by bare name; older versions used the binder path
+    return next(v for k, v in gp.params.items() if k == name or k.endswith("\\" + name))
 
 
 def copy_row(param, src_id, dst_id, name):
