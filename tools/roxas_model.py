@@ -121,6 +121,8 @@ def bone_maps(pairs, parents):
 
 
 NEIGHBOURS = 6
+CROTCH_CM, CROTCH_Y = 7.0, 80.0   # KH2 cm: the joined inner trouser faces
+SIDE_CM = 3.0          # KH2 cm from the middle: beyond this, a vertex only follows Sora vertices on its own side
 
 
 def fit_roxas(roxas_fbx, pairs, report=print):
@@ -135,17 +137,63 @@ def fit_roxas(roxas_fbx, pairs, report=print):
     SP = np.array([p for p, kw, q, dw in pairs]) * MIRROR
     SG = [lookup(maps, max(kw.items(), key=lambda x: x[1])[0]) if kw else None for p, kw, q, dw in pairs]
     SW = [dw for p, kw, q, dw in pairs]
+    limb_side = [1 if any(n.startswith("L_") for n in dw) else -1 if any(n.startswith("R_") for n in dw) else 0
+                 for dw in SW]
+    # v126b (in-game: "feet messed up" – shoes fused into one flat board, trouser legs joined like a skirt): the
+    # legs stand only a few cm apart in the bind pose, so a vertex on the inside of one leg also picked Sora vertices
+    # of the other leg and got weights of both. Away from the middle, neighbours now come from the same side only.
+    side = np.sign(SP[:, 0])
+    joint_x = {oid: float(np.asarray(b["glob"])[3, 0]) for oid, b in r["bones"].items()}
+    nm = _names(r)
+    dsr_of = {f"Bone{int(k):04d}": v["dsr"] for k, v in json.load(open(BONE_MAP, encoding="utf-8"))["bones"].items()}
+    trees = {s: (cKDTree(SP[side == s]), np.flatnonzero(side == s)) for s in (-1.0, 1.0)}
     tree = cKDTree(SP)
     pos, wts = [], []
     for m in r["meshes"]:
         V = np.asarray(m["V"], float) * MIRROR
         dist, idx = tree.query(V, k=NEIGHBOURS)
+        # side of each Roxas vertex: the side of the joint of its dominant KH2 bone (limb joints sit well off the
+        # middle; the inner faces of the trouser legs do not), else from its own position
+        kside = np.zeros(len(V))
+        for i, w in enumerate(m["W"]):
+            if w:
+                jx = joint_x.get(max(w.items(), key=lambda x: x[1])[0], 0.0)
+                kside[i] = np.sign(jx) if abs(jx) > SIDE_CM else 0.0
+        far = (kside == 0) & (np.abs(V[:, 0]) > SIDE_CM)
+        kside[far] = np.sign(V[far, 0])
+        for s, (t, ids) in trees.items():
+            sel = np.flatnonzero(kside == s)
+            if len(sel):
+                d2, i2 = t.query(V[sel], k=NEIGHBOURS)
+                dist[sel], idx[sel] = d2, ids[i2]
         P = np.zeros((len(V), 3)); Wd = []
         for i, p in enumerate(V):
             w = 1.0 / (dist[i] + 0.5)              # cm; nearer Sora vertices count more
+            # never mix the two legs / arms: keep the neighbours of the side that weighs more (Sora's own vertices
+            # never carry left and right weights together)
+            sides = np.array([limb_side[j] for j in idx[i]])
+            kw = m["W"][i]
+            if abs(p[0]) < CROTCH_CM and p[1] < CROTCH_Y and kw:
+                # inner faces of Roxas's trouser legs, joined to the other leg in his KH2 mesh: his own KH2 skin
+                # (through Sora's bone map) decides, so the cloth between the legs stretches as it does in KH2
+                tot = sum(kw.values())
+                q, dw = np.zeros(3), {}
+                for o, x in kw.items():
+                    b = nm[o]
+                    q += (x / tot) * (np.r_[p, 1.0] @ lookup(maps, b))
+                    n = dsr_of.get(b)
+                    if n:
+                        dw[n] = dw.get(n, 0.0) + x / tot
+                P[i] = q; Wd.append(dw)
+                continue
+            if (sides > 0).any() and (sides < 0).any():
+                keep = 1.0 if w[sides > 0].sum() >= w[sides < 0].sum() else -1.0
+                w = np.where(sides == -keep, 0.0, w)
             w = w / w.sum()
             q, dw = np.zeros(3), {}
             for wi, j in zip(w, idx[i]):
+                if wi == 0:
+                    continue
                 A = SG[j]
                 q += wi * (np.r_[p, 1.0] @ A)
                 for n, y in SW[j].items():
