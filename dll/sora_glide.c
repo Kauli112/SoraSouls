@@ -501,16 +501,19 @@ static void sora_voice(int spell) {
 }
 /* v83 (in-game v82: "the spell sounds come out late"): checked every worker tick (10 ms) instead of with the 0.1 s
    MP tick – a cast is seen the moment its use is counted */
-static int vc_prev[16];
+static int vc_prev[16]; static float vc_cool;
 /* v83 (in-game v82: Sora's death voice did not play – another scream did): also played by the add-on when Sora's
    HP reaches 0 (the sound-bank swap may not be loaded by Mod Engine) */
-static void voice_tick(u64 chr) {
+static void voice_tick(u64 chr, float dt) {
+    if (vc_cool > 0) vc_cool -= dt;
     static int hp_prev = -1; int i, hp = chr ? *(volatile int *)(chr + OFF_HP) : -1;
-    if (hp == 0 && hp_prev > 0) { u8 *w = load_voice(4); if (w) PlaySoundA((const char *)w, 0, 0x0001 | 0x0002 | 0x0004); logs("voice: death\r\n"); }
-    hp_prev = hp;
+    /* v84 (in-game v83: "soras death noise plays twice"): the sound-bank swap does load – the add-on no longer plays it */
+    (void)hp; (void)hp_prev;
     for (i = 0; i < n_s && i < 16; i++) {
         int cur = *(volatile int *)(s_addr[i] + 4);
-        if (cur < vc_prev[i] && !mp_charging) sora_voice(*(volatile int *)s_addr[i]);
+        /* v84 (in-game v83: Firaga played the Fire and the Thunder line): MP sharing lowers the other spells a moment
+           after the cast – only the first drop counts, then 1 s of quiet */
+        if (cur < vc_prev[i] && !mp_charging && vc_cool <= 0) { sora_voice(*(volatile int *)s_addr[i]); vc_cool = 1.0f; }
         vc_prev[i] = cur;
     }
 }
@@ -1240,7 +1243,7 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v83 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
+    logs("SoraSouls glide v84 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));
@@ -1294,7 +1297,7 @@ static u32 WINAPI worker(void *arg) {
         }
         g_live = 1;
         md_t -= dt;
-        voice_tick(chr);
+        voice_tick(chr, dt);
         if (md_t <= 0) { md_t = 0.1f; mp_tick(chr, 0.1f, md_fresh); drive_tick(chr, md_fresh); hits_tick(chr, 0.1f); party_tick(chr, 0.1f); form_tick(chr); drive_items_tick(); md_fresh = 0; }
         hf_t -= dt;
         if (hf_t <= 0) { hf_t = 0.2f; hud_flags_tick(); }
