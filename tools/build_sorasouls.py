@@ -25,7 +25,7 @@ ROOT = os.path.dirname(HERE)
 SETTINGS = os.path.join(ROOT, "sorasouls_settings.json")
 EXPECTED = os.path.join(ROOT, "data", "expected_build.json")
 DSR_IMAGE_SIZE = 0x319B000          # DarkSoulsRemastered.exe the DLL's offsets were measured on
-DLL_NAME = "sora_glide_v81.dll"
+DLL_NAME = "sora_glide_v82.dll"
 FORMS = ("valor", "wisdom", "master", "final", "antiform")
 KEYBLADE_FBX = ("W_EX010", "W_EX010_30", "W_EX010_40", "W_EX010_M0", "W_EX010_10", "W_EX010_20", "W_EX010_N0")
 ITEMPIC = (43, 44, 45, 46, 47, 63, 64, 344)
@@ -164,6 +164,7 @@ def main(argv):
     need = [os.path.join(openkh, "obj", m + ".mdlx") for _, m, _, _ in JOBS] if not kh2 else kh2_required(kh2, openkh)
     need += [os.path.join(openkh, "obj", k + ".mdlx") for k in KEYBLADE_FBX]
     need += [os.path.join(openkh, "remastered", "itempic", f"item-{n:03d}.imd", "-0.dds") for n in ITEMPIC]
+    need += [os.path.join(openkh, "voice", "us", "battle", "tt0_sora.win32.scd")]      # v127 Sora's voice
     missing = sorted(set(p for p in need if not os.path.exists(p)))
     if missing:
         problems.append(f"{len(missing)} KH2 files missing from {openkh} (first: {missing[0]}) – extract your KH2 with "

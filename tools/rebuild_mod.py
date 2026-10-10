@@ -66,6 +66,11 @@ def build_menus(game, mod, kh2, openkh):
         run("sora_title.py", menu, mod, os.path.join(tmp, "title.png"))
 
 
+def build_sounds(game, mod, openkh):
+    # v127: Sora's KH2 voice – death voice in the sound bank, cast voices for the add-on (tools/sora_sounds.py)
+    run("sora_sounds.py", os.path.join(openkh, "voice", "us", "battle"), game, mod)
+
+
 def build_models(game, mod, kh2, openkh, recipes):
     parts = os.path.join(mod, "parts")
     with tempfile.TemporaryDirectory() as tmp:
@@ -143,6 +148,7 @@ def main(argv):
     if kh2 and openkh:
         build_menus(game, mod, kh2, openkh)
         build_models(game, mod, kh2, openkh, opts.get("--recipes", os.path.join(os.path.dirname(HERE), "data", "recipes")))
+        build_sounds(game, mod, openkh)
     else:
         print("KH2-based files skipped (no --kh2 / --openkh)")
     tidy(mod)

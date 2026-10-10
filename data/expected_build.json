@@ -167,6 +167,11 @@
   "script/m16_00_00_00.luabnd.dcx": "f0832ff04bef7822b6f1e44ce4d27fdc3c309fc05159d21d3ccaf89f49870047",
   "script/m17_00_00_00.luabnd.dcx": "3de1a77521f01a9981a03fd8f69a9b719c1efef211ad75c810865f3891a51306",
   "script/m18_00_00_00.luabnd.dcx": "6aca40894f2dabb2bcd686123323880ceef3123a2ce815fe1231f750bdbbf37c",
-  "script/m18_01_00_00.luabnd.dcx": "4ea6102cfbdd57d2121e4428fa2914f7287283c8d0bf6825029c83cacf401057"
+  "script/m18_01_00_00.luabnd.dcx": "4ea6102cfbdd57d2121e4428fa2914f7287283c8d0bf6825029c83cacf401057",
+  "sora_voice/blizzard.wav": "e2a041e78b1ea06ca07e35352e47d32251535711f7f0321aac56acf7f0d56207",
+  "sora_voice/cure.wav": "a0e430bddf677960f6b159ef3e1d9ecead9302dc1940711bf3d5ed8ddb316ff5",
+  "sora_voice/fire.wav": "a40462304b13ebed44ec198ccca1c18d583197feab9ee3eb710a79b1cc55e326",
+  "sora_voice/thunder.wav": "c7054bf4d472ac113f3a4d3cf1e8f710504ab6e367fd0224993d38a093f97993",
+  "sound/frpg_main.fsb": "55c2a60154074f4aa95a47ccece776e5ede5d8c1a0c998b64e67f7b4f2ca743a"
  }
 }

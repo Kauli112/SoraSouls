@@ -37,7 +37,7 @@ The converter lists anything missing before it changes anything. Then:
 
 1. Install Mod Engine 2 for DSR (the converter fills its `mod` folder). The Steam game files are not
    modified (one exception: the title video, see Known limitations).
-2. In `config_darksoulsremastered.toml`, `external_dlls` must list `"mod/sora_glide_v81.dll"` – the add-on that
+2. In `config_darksoulsremastered.toml`, `external_dlls` must list `"mod/sora_glide_v82.dll"` – the add-on that
    runs Glide, High Jump levels, MP Charge, the Drive gauge, the HUD, Drive Form outfits and Donald & Goofy's
    following. It writes `mod\sora_glide.log`.
 3. Start the game with `launchmod_darksoulsremastered.bat` (not Steam's Play button). Play **offline** in

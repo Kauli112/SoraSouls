@@ -93,6 +93,7 @@ IMPORT i64 WINAPI DefWindowProcA(void *, u32, u64, i64);
 IMPORT BOOL WINAPI SetLayeredWindowAttributes(void *, u32, u8, u32);
 IMPORT BOOL WINAPI SetWindowPos(void *, void *, int, int, int, int, u32);
 IMPORT BOOL WINAPI ShowWindow(void *, int);
+IMPORT BOOL WINAPI PlaySoundA(const char *, void *, u32);   /* winmm – v82 Sora's KH2 cast voices */
 IMPORT BOOL WINAPI PeekMessageA(void *, void *, u32, u32, u32);
 IMPORT BOOL WINAPI TranslateMessage(const void *);
 IMPORT i64 WINAPI DispatchMessageA(const void *);
@@ -468,6 +469,20 @@ static void mp_publish(void) {
     g_charge_frac = mp_charging ? 1.0f - mp_timer / MP_CHARGE_S : 0.0f;
     g_mp_frac = n_s ? (float)*(volatile int *)(s_addr[0] + 4) / (float)s_max[0] : -1.0f;
 }
+/* v82 (user: "add [Sora's KH2 voice for] fire blizzard and thunder ... to the casting"): when a Sora spell is cast,
+   play Sora's own KH2 line for its family from mod\sora_voice\*.wav (written by the converter from the player's KH2
+   voice files). Played through Windows (PlaySound), so it ignores the game's volume slider. */
+static void sora_voice(int spell) {
+    static const char *names[4] = { "fire.wav", "blizzard.wav", "thunder.wav", "cure.wav" };
+    char path[600]; int n, f = (spell - 3900) / 10, i = 0;
+    if (spell < 3900 || f < 0 || f > 3) return;
+    n = (int)GetModuleFileNameA(g_self, path, 560);
+    while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
+    { const char *d = "sora_voice\\"; while (d[i]) { path[n++] = d[i++]; } }
+    for (i = 0; names[f][i]; i++) path[n++] = names[f][i];
+    path[n] = 0;
+    PlaySoundA(path, 0, 0x0001 | 0x0002 | 0x00020000);   /* SND_ASYNC | SND_NODEFAULT | SND_FILENAME */
+}
 static void mp_tick_inner(u64 chr, float dt, int fresh);
 static void mp_tick(u64 chr, float dt, int fresh) { mp_tick_inner(chr, dt, fresh); mp_publish(); }
 static void mp_tick_inner(u64 chr, float dt, int fresh) {
@@ -500,6 +515,7 @@ static void mp_tick_inner(u64 chr, float dt, int fresh) {
         int cur = *(volatile int *)(s_addr[cast] + 4), empty;
         float f = s_cure[cast] ? 0.0f : (float)cur / (float)s_max[cast];
         logn("mp: cast, remaining/max ", s_addr[cast], cur, s_max[cast]);
+        sora_voice(*(volatile int *)s_addr[cast]);
         for (i = 0; i < n_s; i++) {
             int v;
             if (i == cast) { s_prev[i] = s_cure[cast] ? 0 : cur; if (s_cure[cast]) *(volatile int *)(s_addr[i] + 4) = 0; continue; }
@@ -1194,7 +1210,7 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v81 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
+    logs("SoraSouls glide v82 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));
