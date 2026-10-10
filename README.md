@@ -79,4 +79,4 @@ Tools live in `tools/` and run on Python 3.13 with soulstruct 2.6.0, Pillow, num
   animation patches.
 - `model_recipe.py` – rebuilds Sora, the Drive Form outfits, Donald, Goofy and the Kingdom Key from the player's KH2
   exports; `drive_outfits.py`, `make_keyblades.py`, `make_party_weapons.py`, `keyblade_icons.py`, `sora_title.py`.
-- `dll/sora_glide.c` – the add-on DLL (`dll/build.sh`, clang + lld-link).
+- `dll/sora_glide.c` – the add-on DLL: `dll\build.bat` on Windows (LLVM from winget), `dll/build.sh` on Linux.
