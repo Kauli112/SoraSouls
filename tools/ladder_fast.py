@@ -20,7 +20,7 @@ from soulstruct.containers import Binder
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tae32 import TAE32
 
-SPEED = 2.0
+SPEED = float(os.environ.get("SORASOULS_LADDER_SPEED", "2.0"))   # v126 test builds: 1.0 = vanilla climb speed
 UP_ANIMS = (7011, 7012)
 DOWN_STEP_STATES, SLIDE_STATE = (237, 238), 251
 
