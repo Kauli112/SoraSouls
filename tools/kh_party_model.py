@@ -753,7 +753,10 @@ def triangles(d, pos, textures):
 
 
 def render(tris, path, title, views=(("front", 0), ("side", 90)), joints=None):
-    import matplotlib
+    try:
+        import matplotlib
+    except ImportError:                                       # previews are optional (the converter has no matplotlib)
+        return
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     from matplotlib.collections import PolyCollection
