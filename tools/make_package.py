@@ -8,7 +8,7 @@ Contents (all original or redistributable – no file from KH2 or DSR, nothing m
   python\                     the official embeddable CPython (python.org, signed by the PSF) + the libraries from
                               the project environment (.venv): soulstruct, soulstruct-havok, numpy, scipy, Pillow,
                               matplotlib, scikit-image and their dependencies
-NOT included yet: the model recipes (data\recipes) – see CONVERTER_PLAN.md, open points before recipes can ship.
+  data\recipes\               model recipes (tools\model_recipe.py): no usable KH2/DSR geometry, see CONVERTER_PLAN.md
 
   python make_package.py <embeddable python folder> <out folder>   -> <out>\SoraSouls\ + <out>\SoraSouls-v124.zip
 """
@@ -49,6 +49,7 @@ def build(embed_dir, out):
     os.makedirs(os.path.join(pkg, "data"))
     for f in ("expected_build.json", "bone_map_sora.json"):
         shutil.copy(os.path.join(ROOT, "data", f), os.path.join(pkg, "data"))
+    shutil.copytree(os.path.join(ROOT, "data", "recipes"), os.path.join(pkg, "data", "recipes"))
     os.makedirs(os.path.join(pkg, "bin"))
     shutil.copy(os.path.join(ROOT, "bin", DLL), os.path.join(pkg, "bin"))
 

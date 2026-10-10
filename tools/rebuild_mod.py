@@ -71,15 +71,15 @@ def build_models(game, mod, kh2, openkh, recipes):
     with tempfile.TemporaryDirectory() as tmp:
         sora = os.path.join(kh2, "sora", "P_EX100.fbx")
         for p in PARTS:
-            run("model_recipe.py", "replay", recipes, f"{p}_9550", sora, tmp)
+            run("model_recipe.py", "replay", recipes, f"{p}_9550", sora, tmp, game)
         run("drive_outfits.py", tmp, os.path.join(kh2, "drive"), parts)
     for who, model, fbx in PARTY:
         for p in PARTS:
-            run("model_recipe.py", "replay", recipes, f"{p}_{model}", os.path.join(kh2, who, fbx + ".fbx"), parts)
+            run("model_recipe.py", "replay", recipes, f"{p}_{model}", os.path.join(kh2, who, fbx + ".fbx"), parts, game)
             run("model_recipe.py", "pngs", os.path.join(parts, f"{p}_{model}.partsbnd.dcx"), os.path.join(kh2, who))
     run("sync_part_variants.py", parts, parts, *(m for _, m, _ in PARTY))
     run("make_party_weapons.py", kh2, os.path.join(game, "parts"), parts)
-    run("model_recipe.py", "replay", recipes, "WP_A_0204", os.path.join(kh2, "keyblade", "W_EX010.fbx"), parts)
+    run("model_recipe.py", "replay", recipes, "WP_A_0204", os.path.join(kh2, "keyblade", "W_EX010.fbx"), parts, game)
     run("model_recipe.py", "texture", os.path.join(parts, "WP_A_0204.partsbnd.dcx"),
         os.path.join(openkh, "obj", "W_EX010.mdlx"))
     # the six extra Keyblades: FBX exports + texture sheets read from the .mdlx (OpenKH's export overwrites
@@ -137,7 +137,7 @@ def main(argv):
     kh2, openkh = opts.get("--kh2"), opts.get("--openkh")
     if kh2 and openkh:
         build_menus(game, mod, kh2, openkh)
-        build_models(game, mod, kh2, openkh, opts.get("--recipes", os.path.join(kh2, "recipes")))
+        build_models(game, mod, kh2, openkh, opts.get("--recipes", os.path.join(os.path.dirname(HERE), "data", "recipes")))
     else:
         print("KH2-based files skipped (no --kh2 / --openkh)")
     tidy(mod)

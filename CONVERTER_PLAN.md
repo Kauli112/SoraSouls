@@ -108,11 +108,11 @@ with a clear message if anything differs, instead of building a broken model.
    Kingdom Key model and the six extra Keyblades, with no Blender. Recipes live in `work/recipes` (not in git, see open points).
    Only the Kingdom Key differs: its texture is now KH2's artwork (v123 had Blender's sRGB->linear copy, darker),
    written by Pillow without mipmaps (user choice 2026-10-10: keep the true artwork). Needs an in-game look.
-   Open points before recipes can ship:
-   * the templates still hold the KH2 triangle lists and our normals; with the export missing they give no
-     positions, but normals + connectivity could in principle be integrated back into a rough shape;
-   * Donald's/Goofy's head caps (from the DSR human head) are stored as absolute positions;
-   * the Keyblade texture sheets come from the player's .mdlx files (`kh2_weapon_texture.py`): OpenKH's FBX export
+   **Recipes made safe to ship (2026-10-10, v125):** normals/tangents in local surface frames, head caps from the
+   player's own human head, bones and the Kingdom Key's sheath as offsets from vanilla parts (details in
+   `tools/model_recipe.py`). Leak test: recipe data alone predicts shape no better than guessing. Recipes now live in
+   `data/recipes` (in git and in the package); the packaged converter with them rebuilds 157 of 157 files exactly.
+   Notes:   * the Keyblade texture sheets come from the player's .mdlx files (`kh2_weapon_texture.py`): OpenKH's FBX export
      overwrites Texture0000.png for every Keyblade.
 2. Recipe extractor + replayer for Sora and the Kingdom Key; prove that the replay reproduces the deployed parts.
 3. `build_sorasouls.py` (one entry point) and the Windows package (embedded Python, wheels, .bat).
