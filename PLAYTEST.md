@@ -1,68 +1,69 @@
-# SoraSouls – Playtest checklist (build v72)
+# SoraSouls – Playtest checklist (build v124)
 
-Thanks for testing! Play **offline**, back up your saves first (`%APPDATA%\DarkSoulsRemastered`), and start the game with `launchmod_darksoulsremastered.bat` in the ModEngine2 folder. See `README.md` for setup and the changed controls (Kingdom Key: R1 light, R2 heavy, **hold L1 + R1 to cast**).
+Thanks for testing! Play **offline** in **Borderless or Windowed** mode, back up your saves first
+(`%APPDATA%\DarkSoulsRemastered`), and start the game with `launchmod_darksoulsremastered.bat` in the ModEngine2
+folder. See `README.md` for setup and the changed controls (Kingdom Key: R1 light, R2 heavy, **hold L1 + R1 to cast**).
 
 For each item, write **OK** or describe what happened (where you were, what you pressed, a screenshot if possible).
+If the game crashes or acts strangely, also send `mod\sora_glide.log` (in the ModEngine2 folder).
 
-## 1. New character (start a NEW Knight – these only apply to new characters)
+## 1. New character (start a NEW Knight)
 | # | Check | Expected | Result |
 |---|---|---|---|
-| 1.1 | Starting stats | VIT 12, ATT 12, END 11, STR 11, DEX 13, INT 12, FTH 8, RES 7 | |
-| 1.2 | Spell slots | 2 slots, Fire attuned | |
-| 1.3 | Starting gear | Kingdom Key in the right hand, left hand empty, Sora's Hair/Jacket/Gloves/Shoes | |
-| 1.4 | Roll | **Fast roll** with the starting gear | |
+| 1.1 | Title screen | "SORA SOULS" logo | |
+| 1.2 | Starting gear | Sora with the Kingdom Key in the right hand, left hand empty | |
+| 1.3 | Starting magic | Fire attuned | |
+| 1.4 | Roll | Fast roll with the starting gear | |
 
-## 2. Feel
+## 2. Feel and looks
 | # | Check | Expected | Result |
 |---|---|---|---|
 | 2.1 | Does Sora feel like Sora? | Nimble, dodge-first, Keyblade first and magic second | |
-| 2.2 | Damage taken | Noticeably squishier than a normal Knight (light clothes) – too much? | |
-| 2.3 | Keyblade melee damage | Too strong / too weak / fine? | |
+| 2.2 | Damage taken / Keyblade damage | Too strong, too weak or fine? | |
+| 2.3 | Sora's model | Even colour, no other face showing through (also while guarding), no stretched parts | |
+| 2.4 | Kingdom Key | Same brightness as Sora and the other Keyblades; no shimmer from a distance | |
 
 ## 3. Magic
 | # | Check | Expected | Result |
 |---|---|---|---|
 | 3.1 | L1 + R1 cast | Always casts (also when pressing R1 right after L1) | |
 | 3.2 | Spell origin | Spells and the cast glow come from the Keyblade tip | |
-| 3.3 | INT scaling | Cast the same spell at the same enemy, level INT a few times: spells hit a bit harder | |
-| 3.4 | Spell balance | Fire / Blizzard / Thunder: which feel too strong or too weak? | |
+| 3.3 | Thunder / Thundara / Thundaga | Thunder sound plays; the throw motion looks right with the Keyblade | |
+| 3.4 | Cure / Cura / Curaga | Heals; uses all MP; MP Charge starts | |
+| 3.5 | MP Charge | Spells share the MP bar; empty bar turns pink, refills after a short charge ("MP RESTORED") | |
+| 3.6 | Spell balance | Which spells feel too strong or too weak? | |
 
 ## 4. Movement
 | # | Check | Expected | Result |
 |---|---|---|---|
 | 4.1 | High Jump | Running jump goes about chest-height higher | |
-| 4.2 | Glide | Unlocks after the Bell Gargoyles; while falling, hold B / Circle (Space) to float down | |
-| 4.3 | Sprinting on stairs | Normal (no floating) | |
-| 4.4 | Lifts / elevators | Riding up feels normal, no sudden launch | |
-| 4.5 | Fall damage | No fall damage when you glide to the ground | |
+| 4.2 | Glide | After the Bell Gargoyles: while falling, hold B / Circle (Space) to float down, no fall damage | |
+| 4.3 | Ladders | Climbing up is fast; pressing down slides | |
+| 4.4 | Stairs and lifts | Normal (no floating, no sudden launch) | |
 
-## 5. Looks
+## 5. Drive Forms and abilities
 | # | Check | Expected | Result |
 |---|---|---|---|
-| 5.1 | Face | No other face showing through Sora's head – especially while guarding (hold L1) | |
-| 5.2 | Anything else odd | Clipping, floating weapons, stretched parts | |
+| 5.1 | Drive gauge | Fills when Sora lands hits or takes damage; full gauge gives a Drive use back | |
+| 5.2 | Drive Forms | Valor / Wisdom / Master / Final work, outfit changes, uses refill when resting | |
+| 5.3 | HUD messages | "Sora learned …!" and other SoraSouls messages show above the MP / Drive bars and never block attacking or casting | |
+| 5.4 | Abilities panel | J or hold L3 opens it; learned abilities listed by name | |
 
-## 6. Drive Forms and abilities
+## 6. Keyblades and shop
 | # | Check | Expected | Result |
 |---|---|---|---|
-| 6.1 | Drive Forms | Valor / Wisdom / Master / Final work and refill when resting | |
-| 6.2 | "Sora learned …!" | Messages appear after the right bosses, on the message line above the MP / Drive bars (bottom right) | |
+| 6.1 | Keyblade drops | A Keyblade drops from Bell Gargoyles, Gaping Dragon, Sif, Ornstein & Smough, Four Kings, Seath | |
+| 6.2 | Keyblade icons and looks | Each has its KH2 icon in the menu and looks right in Sora's hand | |
+| 6.3 | Upgrades | Keyblades upgrade with normal Titanite to +10 | |
+| 6.4 | Moogle shop | Undead Merchant sells Boost rings and Potion / Hi-Potion / Elixir | |
 
-## 7. HUD messages (play in Borderless or Windowed mode)
-| # | Check | Expected | Result |
-|---|---|---|---|
-| 7.1 | Messages don't block controls | Every SoraSouls message ("Sora learned …", Drive Form gained, Glide / High Jump levels, Anti Form, "Not enough Drive") shows on the line above the MP / Drive bars, and you can still attack and cast while it is showing | |
-
-## 8. Donald & Goofy
-Use the **Donald & Goofy** item to call them (use it again to send them away). They look like their KH2 selves: Donald carries his Mage's Staff, Goofy his Knight's Shield.
+## 7. Donald & Goofy
+Use the **Donald & Goofy** item to call them (use it again to send them away).
 
 | # | Check | Expected | Result |
 |---|---|---|---|
-| 8.1 | Donald casts | In a fight, Donald casts sorceries (Soul Arrow / Heavy Soul Arrow) at enemies with his staff. He never uses a dagger or a shield | |
-| 8.2 | Not in the way, mid-fight | During a fight and in doorways, walking into Donald or Goofy for a moment swaps him to a spot right behind Sora. While you fight **next to** them without walking into them, they should not be swapped away. They never fall through the floor | |
-| 8.3 | Donald up close | When an enemy is right next to Donald, he swings his staff (or casts) – he never punches | |
-| 8.4 | Goofy attacks with his shield | Goofy hits enemies with shield bashes (no mace) and still blocks with the shield | |
-| 8.5 | Weapons in hand | Donald's staff and Goofy's shield sit in their closed gloves while idle, walking, attacking and casting | |
-| 8.6 | After loading a save | Quit with Donald & Goofy in the party, reload: they appear by themselves within a few seconds | |
-
-If the game crashes or acts strangely, also send `mod\sora_glide.log` (from the ModEngine2 folder).
+| 7.1 | They follow | They keep up with Sora and fight enemies | |
+| 7.2 | Donald | Casts at enemies with his staff, swings it up close, never punches; sometimes heals Sora | |
+| 7.3 | Goofy | Bashes enemies with his shield and blocks with it | |
+| 7.4 | Not in the way | Walking into one swaps him behind Sora; they never fall through the floor | |
+| 7.5 | After loading a save | Quit with them in the party, reload: they appear by themselves within a few seconds | |
