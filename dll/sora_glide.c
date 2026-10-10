@@ -472,16 +472,47 @@ static void mp_publish(void) {
 /* v82 (user: "add [Sora's KH2 voice for] fire blizzard and thunder ... to the casting"): when a Sora spell is cast,
    play Sora's own KH2 line for its family from mod\sora_voice\*.wav (written by the converter from the player's KH2
    voice files). Played through Windows (PlaySound), so it ignores the game's volume slider. */
-static void sora_voice(int spell) {
-    static const char *names[4] = { "fire.wav", "blizzard.wav", "thunder.wav", "cure.wav" };
-    char path[600]; int n, f = (spell - 3900) / 10, i = 0;
-    if (spell < 3900 || f < 0 || f > 3) return;
+IMPORT BOOL WINAPI ReadFile(HANDLE, void *, u32, u32 *, void *);
+IMPORT BOOL WINAPI CloseHandle(HANDLE);
+IMPORT void *WINAPI VirtualAlloc(void *, SIZE_T, u32, u32);
+static u8 *g_voice[5]; static int g_voice_tried[5];
+static u8 *load_voice(int f) {             /* v83: whole WAV kept in memory – PlaySound from memory starts at once */
+    static const char *names[5] = { "fire.wav", "blizzard.wav", "thunder.wav", "cure.wav", "death.wav" };
+    char path[600]; int n, i = 0; void *h; u32 got = 0;
+    if (g_voice_tried[f]) return g_voice[f];
+    g_voice_tried[f] = 1;
     n = (int)GetModuleFileNameA(g_self, path, 560);
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *d = "sora_voice\\"; while (d[i]) { path[n++] = d[i++]; } }
     for (i = 0; names[f][i]; i++) path[n++] = names[f][i];
     path[n] = 0;
-    PlaySoundA(path, 0, 0x0001 | 0x0002 | 0x00020000);   /* SND_ASYNC | SND_NODEFAULT | SND_FILENAME */
+    h = CreateFileA(path, 0x80000000, 1, 0, 3, 0x80, 0);       /* GENERIC_READ, OPEN_EXISTING */
+    if (!h || h == (void *)-1) { logs("voice: missing "); logs(path); logs("\r\n"); return 0; }
+    g_voice[f] = VirtualAlloc(0, 4 << 20, 0x3000, 0x04);
+    if (g_voice[f]) ReadFile(h, g_voice[f], 4 << 20, &got, 0);
+    CloseHandle(h);
+    return g_voice[f];
+}
+static void sora_voice(int spell) {
+    int f = (spell - 3900) / 10; u8 *w;
+    if (spell < 3900 || f < 0 || f > 3) return;
+    w = load_voice(f);
+    if (w) PlaySoundA((const char *)w, 0, 0x0001 | 0x0002 | 0x0004);   /* SND_ASYNC | SND_NODEFAULT | SND_MEMORY */
+}
+/* v83 (in-game v82: "the spell sounds come out late"): checked every worker tick (10 ms) instead of with the 0.1 s
+   MP tick – a cast is seen the moment its use is counted */
+static int vc_prev[16];
+/* v83 (in-game v82: Sora's death voice did not play – another scream did): also played by the add-on when Sora's
+   HP reaches 0 (the sound-bank swap may not be loaded by Mod Engine) */
+static void voice_tick(u64 chr) {
+    static int hp_prev = -1; int i, hp = chr ? *(volatile int *)(chr + OFF_HP) : -1;
+    if (hp == 0 && hp_prev > 0) { u8 *w = load_voice(4); if (w) PlaySoundA((const char *)w, 0, 0x0001 | 0x0002 | 0x0004); logs("voice: death\r\n"); }
+    hp_prev = hp;
+    for (i = 0; i < n_s && i < 16; i++) {
+        int cur = *(volatile int *)(s_addr[i] + 4);
+        if (cur < vc_prev[i] && !mp_charging) sora_voice(*(volatile int *)s_addr[i]);
+        vc_prev[i] = cur;
+    }
 }
 static void mp_tick_inner(u64 chr, float dt, int fresh);
 static void mp_tick(u64 chr, float dt, int fresh) { mp_tick_inner(chr, dt, fresh); mp_publish(); }
@@ -515,7 +546,6 @@ static void mp_tick_inner(u64 chr, float dt, int fresh) {
         int cur = *(volatile int *)(s_addr[cast] + 4), empty;
         float f = s_cure[cast] ? 0.0f : (float)cur / (float)s_max[cast];
         logn("mp: cast, remaining/max ", s_addr[cast], cur, s_max[cast]);
-        sora_voice(*(volatile int *)s_addr[cast]);
         for (i = 0; i < n_s; i++) {
             int v;
             if (i == cast) { s_prev[i] = s_cure[cast] ? 0 : cur; if (s_cure[cast]) *(volatile int *)(s_addr[i] + 4) = 0; continue; }
@@ -1210,7 +1240,7 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v82 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
+    logs("SoraSouls glide v83 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));
@@ -1264,6 +1294,7 @@ static u32 WINAPI worker(void *arg) {
         }
         g_live = 1;
         md_t -= dt;
+        voice_tick(chr);
         if (md_t <= 0) { md_t = 0.1f; mp_tick(chr, 0.1f, md_fresh); drive_tick(chr, md_fresh); hits_tick(chr, 0.1f); party_tick(chr, 0.1f); form_tick(chr); drive_items_tick(); md_fresh = 0; }
         hf_t -= dt;
         if (hf_t <= 0) { hf_t = 0.2f; hud_flags_tick(); }

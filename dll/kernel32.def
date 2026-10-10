@@ -13,3 +13,6 @@ CreateFileA
 WriteFile
 DisableThreadLibraryCalls
 GetCurrentProcessId
+ReadFile
+CloseHandle
+VirtualAlloc

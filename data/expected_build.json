@@ -3,7 +3,7 @@
  "files": {
   "chr/c0000.anibnd.dcx": "7551a3e6f3879fac5e2131959d2b5018bb164133ddb40fcda79b8631577124e0",
   "chr/c0000.chrbnd.dcx": "e455242332037f5b4c182091cbb8b819002e5e81e66f662a87fd2a8140b5ec12",
-  "chr/c0000.esd.dcx": "657ae24fb12aa17c0723c43a4348a77dfca3c1edba98f575c311645d1b922433",
+  "chr/c0000.esd.dcx": "a2a72fe1f1cb0dca6eef4edc3a75794be3557523ebea7e72b5314a0211883f22",
   "chr/c0000_a00_lo.anibnd.dcx": "f57fcbae948aced90703377b190cd22c6e00b977140270affd1c87685752d663",
   "chr/c0000_a00_md.anibnd.dcx": "422550976f0fcda4857fb1481ba425441b0f093a2911aeba9ff4a8f61dd94570",
   "event/common.emevd.dcx": "dbbeb78f4ba70210487072812f7e087dad3722995fb08fb62138fd4c705a2e88",
@@ -170,8 +170,9 @@
   "script/m18_01_00_00.luabnd.dcx": "4ea6102cfbdd57d2121e4428fa2914f7287283c8d0bf6825029c83cacf401057",
   "sora_voice/blizzard.wav": "e2a041e78b1ea06ca07e35352e47d32251535711f7f0321aac56acf7f0d56207",
   "sora_voice/cure.wav": "a0e430bddf677960f6b159ef3e1d9ecead9302dc1940711bf3d5ed8ddb316ff5",
+  "sora_voice/death.wav": "5429716d586db4d3b48a94065d507b64056788e4cc4ba18d6b037d2212045583",
   "sora_voice/fire.wav": "a40462304b13ebed44ec198ccca1c18d583197feab9ee3eb710a79b1cc55e326",
   "sora_voice/thunder.wav": "c7054bf4d472ac113f3a4d3cf1e8f710504ab6e367fd0224993d38a093f97993",
-  "sound/frpg_main.fsb": "55c2a60154074f4aa95a47ccece776e5ede5d8c1a0c998b64e67f7b4f2ca743a"
+  "sound/frpg_main.fsb": "c51774efa442d911fd681dc2af149483fe015f8c3c29bbb3dedb03126b800107"
  }
 }

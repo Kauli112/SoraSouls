@@ -6,7 +6,8 @@ picked them by ear: death 03, Fire 11, Blizzard 12, Thunder 13, Cure 14.
   * Death: sound\frpg_main.fsb (the player's own copy) with the male death voices voice-m-dead.wav and
     voice-mx-dead.wav replaced (tools/fsb4.py). Same index/name, so the game's event file still finds them.
     Note: the same voice is used by every male character.
-  * Casting: mod\sora_voice\fire|blizzard|thunder|cure.wav, played by the add-on DLL (v82+) when a Sora spell is cast.
+  * Casting: mod\sora_voice\fire|blizzard|thunder|cure.wav, played by the add-on DLL (v82+) when a Sora spell is cast;
+    death.wav, played by the add-on (v83+) when Sora's HP reaches 0 (in-game v82 the bank swap seemed not to apply).
 
   python sora_sounds.py <KH2 voice\us\battle dir> <DSR game dir> <out mod dir>
 """
@@ -18,7 +19,7 @@ import fsb4, kh2_voice  # noqa: E402
 
 SCD = "tt0_sora.win32.scd"
 CLIPS = {"death": 3, "fire": 11, "blizzard": 12, "thunder": 13, "cure": 14}
-DEATH_SAMPLES = ("voice-m-dead.wav", "voice-mx-dead.wav")
+DEATH_SAMPLES = ("voice-m-dead.wav", "voice-mx-dead.wav", "voice-m-fallindead.wav", "voice-mx-fallindead.wav")
 
 
 def build(voice_dir, game, mod):
@@ -30,7 +31,7 @@ def build(voice_dir, game, mod):
     wavs = {}
     for name, k in CLIPS.items():
         data, rate = sf.read(io.BytesIO(clips[k]["ogg"]))
-        p = os.path.join(out, f"{name}.wav") if name != "death" else os.path.join(tempfile.mkdtemp(), "death.wav")
+        p = os.path.join(out, f"{name}.wav")             # death.wav too: the add-on plays it as well (v83)
         sf.write(p, data, rate, subtype="PCM_16")
         wavs[name] = p
     os.makedirs(os.path.join(mod, "sound"), exist_ok=True)
