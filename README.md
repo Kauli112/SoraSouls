@@ -37,7 +37,7 @@ The converter lists anything missing before it changes anything. Then:
 
 1. Install Mod Engine 2 for DSR (the converter fills its `mod` folder). The Steam game files are not
    modified (one exception: the title video, see Known limitations).
-2. In `config_darksoulsremastered.toml`, `external_dlls` must list `"mod/sora_glide_v77.dll"` – the add-on that
+2. In `config_darksoulsremastered.toml`, `external_dlls` must list `"mod/sora_glide_v79.dll"` – the add-on that
    runs Glide, High Jump levels, MP Charge, the Drive gauge, the HUD, Drive Form outfits and Donald & Goofy's
    following. It writes `mod\sora_glide.log`.
 3. Start the game with `launchmod_darksoulsremastered.bat` (not Steam's Play button). Play **offline** in
@@ -57,6 +57,7 @@ The converter lists anything missing before it changes anything. Then:
 | Abilities | KH2-style passives and rings unlocked by bosses ("Sora learned …!" on the HUD); full list in the panel (J / L3) |
 | Moogle shop | At the Undead Merchant (Undead Burg): Boost rings, Potion / Hi-Potion / Elixir |
 | Movement | Quick Run, High Jump (LV2 after Taurus Demon, MAX after Sif), Glide (Bell Gargoyles; LV2 Gaping Dragon, MAX Moonlight Butterfly) |
+| Roxas (when Hollow) | While Sora is Hollow he looks like Roxas (KH2 model, fitted with Sora's own fit) |
 | Donald & Goofy | The "Donald & Goofy" item calls them (use again to send them away); KH2 models, Donald casts, Goofy bashes with his shield |
 | Title screen | "SORA SOULS" logo and intro |
 

@@ -25,7 +25,7 @@ ROOT = os.path.dirname(HERE)
 SETTINGS = os.path.join(ROOT, "sorasouls_settings.json")
 EXPECTED = os.path.join(ROOT, "data", "expected_build.json")
 DSR_IMAGE_SIZE = 0x319B000          # DarkSoulsRemastered.exe the DLL's offsets were measured on
-DLL_NAME = "sora_glide_v77.dll"
+DLL_NAME = "sora_glide_v79.dll"
 FORMS = ("valor", "wisdom", "master", "final", "antiform")
 KEYBLADE_FBX = ("W_EX010", "W_EX010_30", "W_EX010_40", "W_EX010_M0", "W_EX010_10", "W_EX010_20", "W_EX010_N0")
 ITEMPIC = (43, 44, 45, 46, 47, 63, 64, 344)
@@ -36,6 +36,7 @@ NOT_COMPARED = {"event/common.emevd.dcx.evs.py"}
 def kh2_required(kh2, openkh):
     t = [f"Texture000{i}.png" for i in range(3)]
     need = [os.path.join(kh2, "sora", "P_EX100.fbx")] + [os.path.join(kh2, "sora", x) for x in t]
+    need += [os.path.join(kh2, "roxas", "P_EX110.fbx")] + [os.path.join(kh2, "roxas", x) for x in t[:2]]
     need += [os.path.join(kh2, "drive", f, x) for f in FORMS for x in t]
     for who, body, weapon in (("donald", "P_EX020", "W_EX020"), ("goofy", "P_EX030", "W_EX030")):
         need += [os.path.join(kh2, who, body + ".fbx"), os.path.join(kh2, who, weapon + ".fbx"),
@@ -127,7 +128,7 @@ def main(argv):
                 if k not in NOT_COMPARED and not k.endswith((".dll", ".log", ".txt")) and not k.startswith("movww/")}
         os.makedirs(os.path.dirname(EXPECTED), exist_ok=True)
         with open(EXPECTED, "w", encoding="utf-8") as f:
-            json.dump(dict(build="v124", files=data), f, indent=1, sort_keys=True)
+            json.dump(dict(build="v126", files=data), f, indent=1, sort_keys=True)
         print(f"wrote {EXPECTED}: {len(data)} files")
         return 0
 

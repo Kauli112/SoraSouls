@@ -13,7 +13,8 @@ none of OpenKH and no KH2 file. Input: OpenKH's data\kh2 folder (obj\*.mdlx, ext
 import os, shutil, sys, tempfile
 
 # (out subfolder, mdlx name, fbx name or None, texture names or None) – the layout rebuild_mod.py reads
-JOBS = [("sora", "P_EX100", "P_EX100", "Texture{:04d}.png")]
+JOBS = [("sora", "P_EX100", "P_EX100", "Texture{:04d}.png"),
+        ("roxas", "P_EX110", "P_EX110", "Texture{:04d}.png")]      # v126: Roxas, Sora's look while Hollow
 JOBS += [(f"drive/{f}", m, None, "Texture{:04d}.png") for f, m in
          (("valor", "P_EX100_BTLF"), ("wisdom", "P_EX100_MAGF"), ("master", "P_EX100_TRIF"),
           ("final", "P_EX100_ULTF"), ("antiform", "P_EX100_HTLF"))]

@@ -534,6 +534,8 @@ def build_events(game, mod):
     pa_calls, pa_defs = party.party_evs()
     md_calls, md_defs = mp_drive.mp_drive_evs([s["lot"] for s in SPELLS if s["unlock"] != "start"])
     di_calls, di_defs = mp_drive.drive_item_evs()            # v122: Drive Recovery items
+    rx_calls, rx_defs = drive_outfits.roxas_evs()             # v126: Roxas look while Hollow
+    di_calls, di_defs = di_calls + rx_calls, di_defs + rx_defs
     md_calls, md_defs = md_calls + di_calls, md_defs + di_defs
     evs = evs.replace(anchor, anchor + d_calls + mv_calls + hy_calls + lv_calls + kb_calls + md_calls + pa_calls, 1)
     evs += d_defs + mv_defs + hy_defs + lv_defs + kb_defs + md_defs + pa_defs

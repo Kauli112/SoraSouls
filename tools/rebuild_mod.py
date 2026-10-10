@@ -78,6 +78,11 @@ def build_models(game, mod, kh2, openkh, recipes):
             run("model_recipe.py", "replay", recipes, f"{p}_{model}", os.path.join(kh2, who, fbx + ".fbx"), parts, game)
             run("model_recipe.py", "pngs", os.path.join(parts, f"{p}_{model}.partsbnd.dcx"), os.path.join(kh2, who))
     run("sync_part_variants.py", parts, parts, *(m for _, m, _ in PARTY))
+    # v126: Roxas (Sora's look while Hollow), fitted with Sora's own fit (tools/roxas_model.py)
+    with tempfile.TemporaryDirectory() as tmp:
+        skel = os.path.join(tmp, "skeleton.json")
+        run("dsr_skeleton.py", os.path.join(game, "chr", "c0000.chrbnd.dcx"), skel)
+        run("roxas_model.py", os.path.join(kh2, "roxas"), os.path.join(kh2, "sora"), parts, recipes, skel, parts)
     run("make_party_weapons.py", kh2, os.path.join(game, "parts"), parts)
     run("model_recipe.py", "replay", recipes, "WP_A_0204", os.path.join(kh2, "keyblade", "W_EX010.fbx"), parts, game)
     run("model_recipe.py", "texture", os.path.join(parts, "WP_A_0204.partsbnd.dcx"),

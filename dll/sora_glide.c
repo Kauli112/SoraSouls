@@ -734,9 +734,13 @@ static u32 WINAPI hud_thread(void *arg) {
 #define FORM_COUNT     5
 static const int FORM_ARMOR[FORM_COUNT] = { 9580000, 9590000, 9600000, 9610000, 9620000 };
 #define NORMAL_ARMOR   390000
+/* v79 (user: "When humanity is lost on death sora should look like roxas"): Roxas's outfit 9630000 while the event
+   mirrors "player is Hollow" into ROXAS_FLAG (tools/drive_outfits.py); an active Drive Form wins over it */
+#define ROXAS_ARMOR    9630000
+#define ROXAS_FLAG     9991
 static int armor_base(int id) {            /* set base of an armor id (any of ours), or 0 */
     int b = id - id % 1000 - ((id / 1000) % 10) * 1000, k;   /* strip level and part */
-    if (b == NORMAL_ARMOR) return b;
+    if (b == NORMAL_ARMOR || b == ROXAS_ARMOR) return b;
     for (k = 0; k < FORM_COUNT; k++) if (b == FORM_ARMOR[k]) return b;
     return 0;
 }
@@ -763,8 +767,9 @@ static int form_cur = -2;
 static void form_tick(u64 chr) {
     int k, want = -1, target, n1, n2;
     for (k = 0; k < FORM_COUNT; k++) if (flag_on(FORM_FLAG_BASE + k)) { want = k; break; }
+    if (want < 0 && flag_on(ROXAS_FLAG)) want = FORM_COUNT;          /* v79: Hollow -> Roxas */
     if (want == form_cur) return;
-    target = want < 0 ? NORMAL_ARMOR : FORM_ARMOR[want];
+    target = want < 0 ? NORMAL_ARMOR : want == FORM_COUNT ? ROXAS_ARMOR : FORM_ARMOR[want];
     n1 = form_set(chr ? rd64(chr + OFF_PGD) : 0, 0x1000, target, "form outfit: PlayerGameData +off id -> ");
     n2 = form_set(chr, 0x2000, target, "form outfit: ChrIns +off id -> ");
     logn("form outfit: form (-1 none) / armor sets found pgd*100+chr ", 0, want, n1 * 100 + n2);
@@ -1186,7 +1191,7 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v78 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading) started\r\n");
+    logs("SoraSouls glide v79 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));

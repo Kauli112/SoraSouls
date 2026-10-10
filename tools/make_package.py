@@ -4,7 +4,7 @@ Contents (all original or redistributable – no file from KH2 or DSR, nothing m
   build_sorasouls.bat, README.md, PLAYTEST.md, THIRD_PARTY.txt
   tools\*.py                  our Python tools
   data\expected_build.json    SHA-256 checksums of the tested build (no content), data\bone_map_sora.json
-  bin\sora_glide_v77.dll      our add-on DLL
+  bin\sora_glide_v79.dll      our add-on DLL
   python\                     the official embeddable CPython (python.org, signed by the PSF) + the libraries from
                               the project environment (.venv): soulstruct, soulstruct-havok, numpy, scipy, Pillow,
                               matplotlib, scikit-image and their dependencies
@@ -17,7 +17,7 @@ import glob, os, shutil, sys, zipfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 VERSION = "v124"
-DLL = "sora_glide_v77.dll"
+DLL = "sora_glide_v79.dll"
 SKIP_PACKAGES = ("pip",)
 
 

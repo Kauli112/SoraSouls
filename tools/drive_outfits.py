@@ -111,12 +111,33 @@ def build_parts(mod_parts, drive_dir, out_dir):
     return written
 
 
+# v126 (user: "When humanity is lost on death sora should look like roxas"): Roxas's parts (model 9556, tools/
+# roxas_model.py) as one more outfit, armor rows 9630000 (+1000 body, +2000 arms, +3000 legs). Event ROXAS_EVENT mirrors
+# "the player is Hollow" into ROXAS_FLAG; the DLL swaps the armor ids like a Drive Form (forms win while active).
+ROXAS_MODEL, ROXAS_ARMOR, ROXAS_FLAG, ROXAS_EVENT = 9556, 9630000, 9991, 9918
+
+
 def build_params(gp, get_param, copy_row):
     pr = get_param(gp, "EquipParamProtector")
-    for key, folder, fbx, model, armor, prefix in FORMS:
+    for key, folder, fbx, model, armor, prefix in FORMS + [("roxas", None, None, ROXAS_MODEL, ROXAS_ARMOR, "ROXAS")]:
         for k in range(4):
             r = copy_row(pr, SORA_ARMOR + 1000 * k, armor + 1000 * k, f"SoraSouls {key} outfit {k}")
             r.EquipmentModel = model
+
+
+def roxas_evs():
+    return f"    Event_{ROXAS_EVENT}()\n", f'''
+
+@ContinueOnRest({ROXAS_EVENT})
+def Event_{ROXAS_EVENT}():
+    """SoraSouls: flag {ROXAS_FLAG} on while the player is Hollow (Sora then looks like Roxas – DLL outfit swap)."""
+    if CharacterIsHollow(PLAYER):
+        EnableFlag({ROXAS_FLAG})
+    else:
+        DisableFlag({ROXAS_FLAG})
+    Wait(1.0)
+    return RESTART
+'''
 
 
 if __name__ == "__main__":
