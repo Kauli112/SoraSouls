@@ -25,7 +25,7 @@ This applies to every weapon that can cast: a normal catalyst in the right hand 
 | Abilities panel | J | hold L3 for a moment |
 
 ## Getting started
-**What you need:** Dark Souls Remastered (Steam), the PC release of KINGDOM HEARTS HD 1.5+2.5 ReMIX, Mod Engine 2
+**Setup, step by step: `INSTALL.md`.** In short – **what you need:** Dark Souls Remastered (Steam), the PC release of KINGDOM HEARTS HD 1.5+2.5 ReMIX, Mod Engine 2
 for DSR, and OpenKH with your copy of KH2 extracted by its own extractor (that gives OpenKH's `data\kh2` folder).
 
 **Building the mod:** run `build_sorasouls.bat`. It finds Dark Souls Remastered through Steam and asks once for the

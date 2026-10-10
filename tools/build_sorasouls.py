@@ -18,7 +18,7 @@ Steps:
                             [--force] [--no-install] [--yes]
   python build_sorasouls.py --write-expected <reference mod dir>     (developer: record the tested build)
 """
-import datetime, hashlib, json, os, re, shutil, struct, subprocess, sys, tempfile
+import datetime, glob, hashlib, json, os, re, shutil, struct, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -134,14 +134,16 @@ def main(argv):
     interactive = sys.stdin.isatty() and "--yes" not in flags
     saved = json.load(open(SETTINGS, encoding="utf-8")) if os.path.exists(SETTINGS) else {}
     print("SoraSouls converter\n1. Folders")
-    dsr = ask("Dark Souls Remastered", opts.get("--dsr") or saved.get("dsr") or steam_dsr(),
+    print("  (setup guide: INSTALL.md)")
+    dsr = ask("Dark Souls Remastered (INSTALL.md step 1)", opts.get("--dsr") or saved.get("dsr") or steam_dsr(),
               lambda p: os.path.exists(os.path.join(p, "DarkSoulsRemastered.exe")), interactive)
-    me = ask("Mod Engine 2 (the folder with launchmod_darksoulsremastered.bat)",
+    me = ask("Mod Engine 2 (the folder with launchmod_darksoulsremastered.bat – INSTALL.md step 5)",
              opts.get("--modengine") or saved.get("modengine"),
-             lambda p: os.path.exists(os.path.join(p, "config_darksoulsremastered.toml")), interactive)
-    okh = ask("OpenKH (the folder with OpenKh.Tools.Kh2MdlxEditor.exe)", opts.get("--openkh-app") or saved.get("openkh_app"),
+             lambda p: all(os.path.exists(os.path.join(p, n)) for n in
+                           ("config_darksoulsremastered.toml", "launchmod_darksoulsremastered.bat")), interactive)
+    okh = ask("OpenKH (the folder with OpenKh.Tools.Kh2MdlxEditor.exe – INSTALL.md step 4)", opts.get("--openkh-app") or saved.get("openkh_app"),
               lambda p: os.path.exists(os.path.join(p, "OpenKh.Tools.Kh2MdlxEditor.dll")), interactive)
-    openkh = ask("OpenKH data\\kh2 (your extracted KH2: obj\\, remastered\\)",
+    openkh = ask("OpenKH data\\kh2 (KH2 extracted with OpenKH: obj\\, remastered\\ – INSTALL.md step 4)",
                  opts.get("--openkh") or saved.get("openkh") or os.path.join(okh, "data", "kh2"),
                  lambda p: os.path.isdir(os.path.join(p, "obj")), interactive)
     kh2 = opts.get("--kh2")                       # optional: hand-made exports instead of the automatic ones
@@ -155,14 +157,19 @@ def main(argv):
     size = pe_image_size(os.path.join(dsr, "DarkSoulsRemastered.exe"))
     if size != DSR_IMAGE_SIZE:
         problems.append(f"DarkSoulsRemastered.exe has image size {size:#x}, SoraSouls was made for {DSR_IMAGE_SIZE:#x}"
-                        " (different game version – the add-on DLL may not work)")
+                        " (different game version – the add-on DLL may not work; INSTALL.md step 1)")
     sys.path.insert(0, HERE)
     from kh2_export import JOBS
     need = [os.path.join(openkh, "obj", m + ".mdlx") for _, m, _, _ in JOBS] if not kh2 else kh2_required(kh2, openkh)
     need += [os.path.join(openkh, "obj", k + ".mdlx") for k in KEYBLADE_FBX]
     need += [os.path.join(openkh, "remastered", "itempic", f"item-{n:03d}.imd", "-0.dds") for n in ITEMPIC]
     missing = sorted(set(p for p in need if not os.path.exists(p)))
-    problems += [f"missing KH2 file: {p}" for p in missing]
+    if missing:
+        problems.append(f"{len(missing)} KH2 files missing from {openkh} (first: {missing[0]}) – extract your KH2 with "
+                        "OpenKH's Mods Manager wizard, last screen (INSTALL.md step 4)")
+    if not kh2 and not glob.glob(os.path.join(os.environ.get("ProgramFiles", r"C:\Program Files"), "dotnet", "shared",
+                                              "Microsoft.WindowsDesktop.App", "8.*")):
+        problems.append(".NET 8 Desktop Runtime not found – OpenKH needs it (INSTALL.md step 3)")
     if not os.path.isdir(recipes) or not any(n.endswith(".recipe.json") for n in os.listdir(recipes)):
         problems.append(f"model recipes not found in {recipes}")
     if not os.path.exists(dll):
@@ -184,7 +191,8 @@ def main(argv):
             r = subprocess.run([sys.executable, os.path.join(HERE, "kh2_export.py"), okh, openkh, kh2], cwd=HERE,
                                stdout=lf, stderr=subprocess.STDOUT)
         if r.returncode:
-            print(f"  exporting the KH2 models with OpenKH FAILED – see {log}")
+            print(f"  exporting the KH2 models with OpenKH FAILED – see {log}. Check that OpenKH runs and is version 26.x "
+                  "(INSTALL.md steps 3-4).")
             return 1
         print("  KH2 models exported with your OpenKH")
     cmd = [sys.executable, os.path.join(HERE, "rebuild_mod.py"), dsr, mod, "--kh2", kh2, "--openkh", openkh,

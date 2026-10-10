@@ -42,7 +42,7 @@ def build(embed_dir, out):
     if os.path.exists(pkg):
         shutil.rmtree(pkg)
     os.makedirs(os.path.join(pkg, "tools"))
-    for f in ("build_sorasouls.bat", "README.md", "PLAYTEST.md", "LICENSE"):
+    for f in ("build_sorasouls.bat", "INSTALL.md", "README.md", "PLAYTEST.md", "LICENSE"):
         shutil.copy(os.path.join(ROOT, f), pkg)
     for f in glob.glob(os.path.join(HERE, "*.py")):
         shutil.copy(f, os.path.join(pkg, "tools"))
