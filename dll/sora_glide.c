@@ -220,6 +220,13 @@ static u64 rd64(u64 a) { return readable((void *)a, 8) ? *(volatile u64 *)a : 0;
 /* ---- pattern scan of the main module's first executable section ---- */
 static const short PAT_WCM[] = { 0x48,0x8B,0x05,-1,-1,-1,-1,0x48,0x8B,0x48,0x68,0x48,0x85,0xC9,0x0F,0x84,-1,-1,-1,-1,
                                  0x48,0x39,0x5E,0x10,0x0F,0x84,-1,-1,-1,-1,0x48 };
+/* v78: ChrFollowCam / CamMan patterns from DSR-Gadget (its "Loaded" test: [[[followcam]+0x60]+0x60] != 0) */
+static const short PAT_FOLLOWCAM[] = { 0x48,0x8B,0x0D,-1,-1,-1,-1,0xE8,-1,-1,-1,-1,0x48,0x8B,0x4E,0x68,0x48,0x8B,0x05,-1,-1,-1,-1,
+                                       0x48,0x89,0x48,0x60 };
+static const short PAT_CAMMAN[] = { 0x48,0x8B,0x05,-1,-1,-1,-1,0x48,0x63,0xD1,0x48,0x8B,0x44,0xD0,0x08,0xC3 };
+static u64 g_followcam_slot, g_camman_slot;
+static volatile int g_cam_ok = 1;          /* v78: 0 while the game has no follow camera (loading screens) */
+static int drive_known(void);
 static const short PAT_FLAGS[] = { 0x48,0x8B,0x0D,-1,-1,-1,-1,0x99,0x33,0xC2,0x45,0x33,0xC0,0x2B,0xC2,0x8D,0x50,0xF6 };
 /* returns the rip-relative target of the 7-byte "mov reg, [rip+rel32]" at the start of the first match */
 static u64 find_slot(const short *PATTERN, int plen, const char *what) {
@@ -573,6 +580,18 @@ static void bar(void *dc, int x, int y, int w, int h, float f, u32 col, u32 back
 #define MSGQ 4
 static const char *volatile g_msgq[MSGQ]; static volatile int g_msg_n; static volatile float g_msg_t;
 static volatile u8 g_learned[HUD_NABILS]; static volatile int g_panel;
+/* v78: the Drive gauge shows only once Sora has learned a Drive Form (category "Drive Forms" in hud_data.h) */
+static int drive_known(void) {
+    int c, i;
+    for (c = 0; c < HUD_NCATS; c++) {
+        const char *a = HUD_CATS[c], *b = "Drive Forms";
+        while (*a && *a == *b) { a++; b++; }
+        if (*a || *b) continue;
+        for (i = 0; i < HUD_NABILS; i++) if (HUD_ABILS[i].cat == c && g_learned[i]) return 1;
+        return 0;
+    }
+    return 1;
+}
 static void msg_push(const char *t) { if (g_msg_n < MSGQ) { g_msgq[g_msg_n] = t; g_msg_n++; } }
 static void text_c(void *dc, const char *t, int cx, int cy) {   /* centred on (cx, cy) */
     POINT sz; int n = slen(t); GetTextExtentPoint32A(dc, t, n, &sz); TextOutA(dc, cx - sz.x / 2, cy - sz.y / 2, t, n);
@@ -604,7 +623,9 @@ static u32 WINAPI hud_thread(void *arg) {
            is not in front, is minimised, or is tiny. */
         fg = GetForegroundWindow(); pid = 0; GetWindowThreadProcessId(fg, &pid);
         if (fg && fg != hwnd && is_game_window(fg) && IsWindowVisible(fg)) game = fg;
-        ok = game && fg == game && !IsIconic(game) && IsWindowVisible(game) && g_live && GetClientRect(game, &cr) && cr.r >= 640 && cr.b >= 360;
+        /* v78 (playtest: "the hud shows up during cutscenes and loading screens"): also hidden while the game has no
+           follow camera (DSR-Gadget's "loaded" test) */
+        ok = game && fg == game && !IsIconic(game) && IsWindowVisible(game) && g_live && g_cam_ok && GetClientRect(game, &cr) && cr.r >= 640 && cr.b >= 360;
         if (ok) {   /* v50 (in-game v73: HUD still over the Claude app): the game window must also be the window actually
                        on screen at the HUD's corner – any other app's window covering that spot hides the HUD */
             POINT c; void *top; c.x = (int)(cr.r * 0.86f); c.y = (int)(cr.b * 0.83f); ClientToScreen(game, &c);   /* where the bars sit */
@@ -684,7 +705,7 @@ static u32 WINAPI hud_thread(void *arg) {
                     if (g_mp_msg_t > 0) { SetTextColor(mdc, RGBC(255, 255, 255)); SelectObject(mdc, small); text_c(mdc, "MP RESTORED", cx, y1 + bht / 2); SelectObject(mdc, font); }
                 }
             }
-            {
+            if (drive_known()) {   /* v78 (playtest: "drive gauge shouldn't be visible with no drive forms") */
                 float shown_drive = g_drive_msg_t > 0 ? 100.0f : g_drive;     /* v48: hold the full bar while "+1" shows */
                 int full = shown_drive >= 99.9f, pulse;
                 full_t = full ? full_t + 0.033f : 0;          /* v50: pulse for 2 s when it fills, then stay bright */
@@ -1161,13 +1182,16 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v77 (MP Charge + Drive gauge + HUD + abilities + party msgs) started\r\n");
+    logs("SoraSouls glide v78 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));
     { u8 *mb = GetModuleHandleA(0); u32 pe = *(u32 *)(mb + 0x3C); g_mod_lo = (u64)mb; g_mod_hi = (u64)mb + *(u32 *)(mb + pe + 0x50); }
     slot = find_slot(PAT_WCM, sizeof PAT_WCM / sizeof PAT_WCM[0], "WorldChrMan");
     g_flags_slot = find_slot(PAT_FLAGS, sizeof PAT_FLAGS / sizeof PAT_FLAGS[0], "EventFlags");
+    g_followcam_slot = find_slot(PAT_FOLLOWCAM, sizeof PAT_FOLLOWCAM / sizeof PAT_FOLLOWCAM[0], "ChrFollowCam");
+    g_camman_slot = find_slot(PAT_CAMMAN, sizeof PAT_CAMMAN / sizeof PAT_CAMMAN[0], "CamMan");
+    logx("ChrFollowCam slot ", g_followcam_slot); logx("CamMan slot ", g_camman_slot);
     if (!g_flags_slot) logs("WARNING: EventFlags pattern not found - Glide stays locked\r\n");
     if (PROBE) { g_gdm_slot = find_slot(PAT_GDM, sizeof PAT_GDM / sizeof PAT_GDM[0], "GameDataMan?"); logx("GameDataMan slot ", g_gdm_slot);
                  if (g_gdm_slot) { u64 g = rd64(g_gdm_slot); logx("GameDataMan ", g); logx("GameDataMan+0x10 ", g ? rd64(g + 0x10) : 0); } }
@@ -1182,6 +1206,16 @@ static u32 WINAPI worker(void *arg) {
         QueryPerformanceCounter(&t1); dt = (float)(t1 - t0) / (float)freq; t0 = t1;
         if (dt <= 0 || dt > 0.25f) { have_prev = 0; continue; }
 
+        if (g_followcam_slot) {   /* v78: loading-screen test + camera log (to find a cutscene signal) */
+            static u64 last_cam = 1, last_active = 1;
+            u64 c0 = rd64(g_followcam_slot), c1 = c0 ? rd64(c0 + 0x60) : 0, c2 = c1 ? rd64(c1 + 0x60) : 0;
+            u64 cm = g_camman_slot ? rd64(g_camman_slot) : 0, active = cm ? rd64(cm + 0x10) : 0;
+            g_cam_ok = c2 != 0;
+            if ((c2 != 0) != (last_cam != 0) || active != last_active) {
+                logx("camera: follow cam ", c2); logx("        CamMan+0x10 ", active);
+                last_cam = c2; last_active = active;
+            }
+        }
         wcm = rd64(slot); chr = wcm ? rd64(wcm + OFF_CHRINS) : 0;
         map = chr ? rd64(chr + OFF_MAPDATA) : 0; pos = map ? rd64(map + OFF_POSDATA) : 0;
         if (!pos || !writable((void *)(chr + OFF_FLAGS1), 4) || !writable((void *)(pos + OFF_POS_Y), 4)) {
