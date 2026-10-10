@@ -117,7 +117,7 @@ with a clear message if anything differs, instead of building a broken model.
 2. Recipe extractor + replayer for Sora and the Kingdom Key; prove that the replay reproduces the deployed parts.
 3. `build_sorasouls.py` (one entry point) and the Windows package (embedded Python, wheels, .bat).
    **Converter done (2026-10-10):** `build_sorasouls.bat` -> `tools/build_sorasouls.py`: finds DSR via Steam, asks
-   for Mod Engine 2 / KH2 exports / OpenKH data once (`sorasouls_settings.json`), checks the exe version and all 76
+   for Mod Engine 2 / KH2 exports / OpenKH data once (`sorasouls_settings.json`), checks the exe version and all 53
    KH2 input files, builds, compares with `data/expected_build.json` (SHA-256 of the tested v124 build, checksums
    only), installs with a backup and points the config at the DLL. Tested into a scratch Mod Engine folder: 157 of
    157 files identical, installed folder equal to the deployed one. Still open: the package itself (embedded Python
