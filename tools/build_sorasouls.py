@@ -2,8 +2,9 @@
 install it into Mod Engine 2 (v124).
 
 Steps:
-  1. Find the folders: DSR (from Steam's library list), Mod Engine 2, the KH2 export folder, the OpenKH data/kh2
-     folder. Answers are remembered in sorasouls_settings.json next to the package; flags override them.
+  1. Find the folders: DSR (from Steam's library list), Mod Engine 2, the player's OpenKH and its data/kh2 folder
+     (KH2 extracted with OpenKH). The model exports are made automatically with OpenKH's own code (kh2_export.py);
+     --kh2 uses hand-made exports instead. Answers are remembered in sorasouls_settings.json next to the package; flags override them.
   2. Check them: DSR exe version (image size the DLL was built against), every KH2 file the build reads, Mod Engine 2.
   3. Build into a temporary folder with rebuild_mod.py (the game folder is only read).
   4. Compare every built file with the SHA-256 list of the tested build (data/expected_build.json – checksums only,
@@ -12,7 +13,8 @@ Steps:
   5. Install: the current Mod Engine 2 mod folder is moved to mod.backup-<time>, the new one copied in with the
      add-on DLL, and config_darksoulsremastered.toml pointed at it. build_report.txt lists every file + checksum.
 
-  python build_sorasouls.py [--dsr DIR] [--modengine DIR] [--kh2 DIR] [--openkh DIR] [--recipes DIR] [--dll FILE]
+  python build_sorasouls.py [--dsr DIR] [--modengine DIR] [--openkh-app DIR] [--openkh DIR] [--kh2 DIR] [--recipes DIR]
+                            [--dll FILE]
                             [--force] [--no-install] [--yes]
   python build_sorasouls.py --write-expected <reference mod dir>     (developer: record the tested build)
 """
@@ -137,14 +139,16 @@ def main(argv):
     me = ask("Mod Engine 2 (the folder with launchmod_darksoulsremastered.bat)",
              opts.get("--modengine") or saved.get("modengine"),
              lambda p: os.path.exists(os.path.join(p, "config_darksoulsremastered.toml")), interactive)
-    kh2 = ask("KH2 exports (sora/ drive/ donald/ goofy/ keyblade/)", opts.get("--kh2") or saved.get("kh2"),
-              lambda p: os.path.isdir(os.path.join(p, "sora")), interactive)
-    openkh = ask("OpenKH data\\kh2", opts.get("--openkh") or saved.get("openkh"),
+    okh = ask("OpenKH (the folder with OpenKh.Tools.Kh2MdlxEditor.exe)", opts.get("--openkh-app") or saved.get("openkh_app"),
+              lambda p: os.path.exists(os.path.join(p, "OpenKh.Tools.Kh2MdlxEditor.dll")), interactive)
+    openkh = ask("OpenKH data\\kh2 (your extracted KH2: obj\\, remastered\\)",
+                 opts.get("--openkh") or saved.get("openkh") or os.path.join(okh, "data", "kh2"),
                  lambda p: os.path.isdir(os.path.join(p, "obj")), interactive)
+    kh2 = opts.get("--kh2")                       # optional: hand-made exports instead of the automatic ones
     recipes = opts.get("--recipes") or saved.get("recipes") or os.path.join(ROOT, "data", "recipes")
     dll = opts.get("--dll") or saved.get("dll") or os.path.join(ROOT, "bin", DLL_NAME)
     with open(SETTINGS, "w", encoding="utf-8") as f:
-        json.dump(dict(dsr=dsr, modengine=me, kh2=kh2, openkh=openkh, recipes=recipes, dll=dll), f, indent=1)
+        json.dump(dict(dsr=dsr, modengine=me, openkh_app=okh, openkh=openkh, recipes=recipes, dll=dll), f, indent=1)
 
     print("2. Checks")
     problems = []
@@ -152,7 +156,12 @@ def main(argv):
     if size != DSR_IMAGE_SIZE:
         problems.append(f"DarkSoulsRemastered.exe has image size {size:#x}, SoraSouls was made for {DSR_IMAGE_SIZE:#x}"
                         " (different game version – the add-on DLL may not work)")
-    missing = [p for p in kh2_required(kh2, openkh) if not os.path.exists(p)]
+    sys.path.insert(0, HERE)
+    from kh2_export import JOBS
+    need = [os.path.join(openkh, "obj", m + ".mdlx") for _, m, _, _ in JOBS] if not kh2 else kh2_required(kh2, openkh)
+    need += [os.path.join(openkh, "obj", k + ".mdlx") for k in KEYBLADE_FBX]
+    need += [os.path.join(openkh, "remastered", "itempic", f"item-{n:03d}.imd", "-0.dds") for n in ITEMPIC]
+    missing = sorted(set(p for p in need if not os.path.exists(p)))
     problems += [f"missing KH2 file: {p}" for p in missing]
     if not os.path.isdir(recipes) or not any(n.endswith(".recipe.json") for n in os.listdir(recipes)):
         problems.append(f"model recipes not found in {recipes}")
@@ -168,10 +177,19 @@ def main(argv):
     print("3. Build (this takes a few minutes)")
     out_root = tempfile.mkdtemp(prefix="sorasouls_build_")
     mod = os.path.join(out_root, "mod")
+    log = os.path.join(out_root, "build_log.txt")
+    if not kh2:                                   # the exports OpenKH's model editor would make, done automatically
+        kh2 = os.path.join(out_root, "kh2_exports")
+        with open(log, "a", encoding="utf-8") as lf:
+            r = subprocess.run([sys.executable, os.path.join(HERE, "kh2_export.py"), okh, openkh, kh2], cwd=HERE,
+                               stdout=lf, stderr=subprocess.STDOUT)
+        if r.returncode:
+            print(f"  exporting the KH2 models with OpenKH FAILED – see {log}")
+            return 1
+        print("  KH2 models exported with your OpenKH")
     cmd = [sys.executable, os.path.join(HERE, "rebuild_mod.py"), dsr, mod, "--kh2", kh2, "--openkh", openkh,
            "--recipes", recipes]
-    log = os.path.join(out_root, "build_log.txt")
-    with open(log, "w", encoding="utf-8") as lf:
+    with open(log, "a", encoding="utf-8") as lf:
         r = subprocess.run(cmd, cwd=HERE, stdout=lf, stderr=subprocess.STDOUT)
     if r.returncode:
         print(f"  build FAILED – see {log}")
@@ -181,6 +199,8 @@ def main(argv):
         p = os.path.join(mod, k)
         if os.path.exists(p):
             os.remove(p)
+    if kh2.startswith(out_root):
+        shutil.rmtree(kh2, ignore_errors=True)    # the temporary exports are not needed any more
     print(f"  {len(built)} files built")
 
     print("4. Compare with the tested build")
