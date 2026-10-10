@@ -39,6 +39,7 @@ TEMPLATES = {DONALD: dict(npc=6520, init=6520, ai=DONALD), GOOFY: dict(npc=6540,
 # Following is done by the DLL (catch-up placement when Sora gets more than a few metres away).
 THINK = {DONALD: 6804, GOOFY: 6802}
 DONALD_INT = 16
+QUICK_RUN_SP, PARTY_SPEED_SP, PARTY_SPEED = 97503, 97680, 1.25   # Sora's Quick Run row as the template
 DONALD_CASTER = 6804                                                    # CharaInitParam of the bandit he copies
 DONALD_COPY = ("RightHandWeapon1", "RightHandWeapon2", "LeftHandWeapon1", "LeftHandWeapon2", "SpellSlot1",
                "SpellSlot2", "SpellSlot3", "SpellSlot4", "SpellSlot5", "SpellSlot6", "SpellSlot7",
@@ -108,6 +109,8 @@ def build_party_params(gp, get_param, copy_row, goods_template, heal_template):
                                 (SHIELD_WEAPON, SHIELD_FROM, SHIELD_MODEL, "Goofy Knight's Shield"),
                                 (STAFF_MELEE, STAFF_MELEE_FROM, STAFF_MODEL, "Donald Mage's Staff (melee)")):
         copy_row(wp, src, wid, f"SoraSouls {nm}").WeaponModel = model
+    spd = copy_row(sp, QUICK_RUN_SP, PARTY_SPEED_SP, "SoraSouls party run speed")
+    spd.AnimationSpeedMultiplier = PARTY_SPEED
     for pid, t in TEMPLATES.items():
         n = copy_row(npc, t["npc"], pid, f"SoraSouls {NAMES[pid]}")
         n.NameID = pid
@@ -116,6 +119,10 @@ def build_party_params(gp, get_param, copy_row, goods_template, heal_template):
         # Solaire NPC (6000) are TeamType 7 vs 2 and IsChangeWanderGhost 0 vs 1 – TeamType 7 marks the summon-sign
         # phantom, drawn only once summoned through a sign. Use the normal NPC values.
         n.TeamType, n.IsChangeWanderGhost = 2, 1
+        # v125 (playtest: "donald and goofy dont keep up they just get teleported"; log: placed from 15-22 m over and
+        # over): Sora outruns them (sprint + Quick Run). A resident speed effect (animation speed, like Quick Run) lets
+        # them keep up on foot, so the catch-up warp is the exception again.
+        n.SpecialEffectID0 = PARTY_SPEED_SP
         # v96 tried a thinner body (HitRadius 0.15): no effect in-game – every vanilla human NPC (c0000, 87 rows)
         # leaves HitRadius/HitHeight at 0, the human body comes from the model. v97: back to 0; blocking is handled
         # by the DLL's quick swap instead.

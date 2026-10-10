@@ -783,6 +783,7 @@ static u64 g_mod_lo, g_mod_hi;
 static u64 sc_addr[MAXE]; static int sc_n; static volatile int g_scan_ready;      /* scanner -> worker hand-over */
 static u64 e_addr[MAXE], e_vt[MAXE]; static int e_hp[MAXE], e_n; static float e_cool[MAXE];
 static volatile u64 g_player;
+static volatile int g_scan_soon;   /* v78: set on a new area / reload – scan after 1.5 s instead of waiting up to 8 s */
 static int chr_like(u64 p) {               /* cheap tests first, VirtualQuery-backed ones last */
     u64 vt = *(volatile u64 *)p, map, pos; int hp, mx;
     if (vt < g_mod_lo || vt >= g_mod_hi || (vt & 7)) return 0;
@@ -796,8 +797,11 @@ static int chr_like(u64 p) {               /* cheap tests first, VirtualQuery-ba
 static u32 WINAPI scan_thread(void *arg) {
     (void)arg;
     for (;;) {
-        u8 *a = (u8 *)0x10000; MBI m; int n = 0;
-        Sleep((u32)(SCAN_S * 1000));
+        u8 *a = (u8 *)0x10000; MBI m; int n = 0, w;
+        /* v78 (playtest: Donald & Goofy "load in weird places and don't teleport closer"): after a load they stood on
+           their map spawn spot until the next scan found them (up to 8 s) */
+        for (w = 0; w < (int)(SCAN_S * 4) && !g_scan_soon; w++) Sleep(250);
+        if (g_scan_soon) { g_scan_soon = 0; Sleep(1500); }
         if (!g_live || g_scan_ready || !g_player) continue;
         while ((u64)a < 0x7FFFFFFF0000ull && VirtualQuery(a, &m, sizeof m) && n < MAXE) {
             u8 *b = (u8 *)m.BaseAddress, *e = b + m.RegionSize;
@@ -1223,7 +1227,7 @@ static u32 WINAPI worker(void *arg) {
             g_live = 0;
             gliding = 0; have_prev = 0; last_chr = 0; continue;
         }
-        if (chr != last_chr) { logx("player ChrIns ", chr); last_chr = chr; have_prev = 0; gliding = 0; md_fresh = 1; }
+        if (chr != last_chr) { logx("player ChrIns ", chr); last_chr = chr; have_prev = 0; gliding = 0; md_fresh = 1; g_scan_soon = 1; }
         flags = (volatile u32 *)(chr + OFF_FLAGS1); py = (volatile float *)(pos + OFF_POS_Y);
         if (TEST_KEYS) {
             u32 pid = 0; int f9, f10;
