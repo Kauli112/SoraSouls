@@ -145,11 +145,14 @@ def fit_roxas(roxas_fbx, pairs, report=print):
     # v126b (in-game: "feet messed up" – shoes fused into one flat board, trouser legs joined like a skirt): the
     # legs stand only a few cm apart in the bind pose, so a vertex on the inside of one leg also picked Sora vertices
     # of the other leg and got weights of both. Away from the middle, neighbours now come from the same side only.
-    side = np.sign(SP[:, 0])
-    joint_x = {oid: float(np.asarray(b["glob"])[3, 0]) for oid, b in r["bones"].items()}
+    # per side: Sora vertices skinned to that side's limbs (or to the middle) – not by position: some of Sora's
+    # own inner-leg vertices sit across the middle in the KH2 bind pose
+    side = np.array([1 if any(n.startswith("L_") for n in dw) else -1 if any(n.startswith("R_") for n in dw) else 0
+                     for _, _, _, dw in pairs], float)
+    joint_x = {oid: float(np.asarray(b["glob"])[0, 3]) for oid, b in r["bones"].items()}   # translation column
     nm = _names(r)
     dsr_of = {f"Bone{int(k):04d}": v["dsr"] for k, v in json.load(open(BONE_MAP, encoding="utf-8"))["bones"].items()}
-    trees = {s: (cKDTree(SP[side == s]), np.flatnonzero(side == s)) for s in (-1.0, 1.0)}
+    trees = {s: (cKDTree(SP[(side == s) | (side == 0)]), np.flatnonzero((side == s) | (side == 0))) for s in (-1.0, 1.0)}
     tree = cKDTree(SP)
     pos, wts = [], []
     for m in r["meshes"]:
