@@ -25,7 +25,12 @@ This applies to every weapon that can cast: a normal catalyst in the right hand 
 | Abilities panel | J | hold L3 for a moment |
 
 ## Getting started
-1. Install Mod Engine 2 for DSR and put the SoraSouls files in its `mod` folder. The Steam game files are not
+**Building the mod:** run `build_sorasouls.bat`. It finds Dark Souls Remastered through Steam, asks once for the
+Mod Engine 2 folder, your KH2 export folder and your OpenKH `data\kh2` folder, checks every file it needs, builds
+the mod from your own game files (the game folder is only read), checks the result against the tested build and
+installs it (your previous `mod` folder is kept as `mod.backup-<date>`). Then:
+
+1. Install Mod Engine 2 for DSR (the converter fills its `mod` folder). The Steam game files are not
    modified (one exception: the title video, see Known limitations).
 2. In `config_darksoulsremastered.toml`, `external_dlls` must list `"mod/sora_glide_v77.dll"` – the add-on that
    runs Glide, High Jump levels, MP Charge, the Drive gauge, the HUD, Drive Form outfits and Donald & Goofy's

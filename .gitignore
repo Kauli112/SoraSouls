@@ -27,3 +27,6 @@ __pycache__/
 *.dll
 *.log
 dll/build/
+sorasouls_settings.json
+bin/
+data/expected_build.json.tmp
