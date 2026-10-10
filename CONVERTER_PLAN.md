@@ -98,6 +98,11 @@ with a clear message if anything differs, instead of building a broken model.
 
 1. Rebuild test: run the whole build from vanilla files here and compare every output with the deployed `mod`
    folder; fix or record each difference (this pins down the chain items).
+   **Done for every non-model file (2026-10-10):** `tools/rebuild_mod.py` rebuilds params, events, text, maps,
+   scripts, the five `chr` files, `WP_A_1309` and the menu textures; all 68 match the deployed v123 files byte for
+   byte. The chain turned out to be shorter than the table above: `swap_cast_arm.py` and `cast_from_weapon.py` are
+   not in the shipped build (md binder = vanilla + ladder_fast; c0000.anibnd = cast_glow_tip + ladder_fast).
+   Tools run on Python 3.13 + soulstruct 2.6.0 (`.venv`). Still open: the KH2 model parts.
 2. Recipe extractor + replayer for Sora and the Kingdom Key; prove that the replay reproduces the deployed parts.
 3. `build_sorasouls.py` (one entry point) and the Windows package (embedded Python, wheels, .bat).
 4. Clean-up list above; new README (install, build, play, uninstall) and PLAYTEST.
