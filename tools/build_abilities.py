@@ -148,6 +148,11 @@ KEY_MAGIC_NAME = "Kingdom Key (Magic)"
 FOCUS, FOCUS_MODEL, FOCUS_NAME = 1310000, 1309, "Keyblade Focus"  # clean base id: the hundreds digit of a DS1 weapon id is its upgrade path (1309100 would read as "Crystal" 1309000)
 FOCUS_EVENT, FOCUS_LOT = 9907, 9800350   # gives the focus once to existing saves
 GOODS_LOT_TEMPLATE, GOODS_CATEGORY = 100000, 0x40000000
+# v124 (in-game 2026-10-10: "the thunder spell has no sound"): the lightning crack is not in the bullet or its
+# effect – vanilla plays it from the Lightning Spear throw animation (a00_6519: sound type 5 at the release). With
+# Soul Arrow's animation (type 0) Thunder only had the quiet wind-up. Thunder family now uses Lightning Spear's
+# animation type 19 (a00_6319 / 6519), like the vanilla spells whose bullets it fires.
+THUNDER_ANIM = 19
 SPELLS = [
     # id, name, template, overrides(ReferenceID [bullet or SpEffect], casts, icon), unlock, mp
     dict(id=3900, old_id=4900, name="Fire", tmpl=SORC_TEMPLATE, ref=6000, casts=16, icon=3020, unlock="start", mp=12,
@@ -162,11 +167,11 @@ SPELLS = [
          desc="Fires a heavier shard of chilling magic."),
     dict(id=3912, old_id=4912, name="Blizzaga", tmpl=SORC_TEMPLATE, ref=3090, casts=6, icon=3059, unlock=ONS, mp=12,
          desc="Fires a piercing spear of crystal ice."),
-    dict(id=3920, old_id=4920, name="Thunder", tmpl=SORC_TEMPLATE, ref=9000, casts=12, icon=3048, unlock=3, mp=12,
+    dict(id=3920, old_id=4920, name="Thunder", tmpl=SORC_TEMPLATE, ref=9000, casts=12, icon=3048, unlock=3, mp=12, anim=THUNDER_ANIM,
          desc="Hurls a bolt of lightning."),
-    dict(id=3921, old_id=4921, name="Thundara", tmpl=SORC_TEMPLATE, ref=9100, casts=8, icon=3049, unlock=9, mp=12,
+    dict(id=3921, old_id=4921, name="Thundara", tmpl=SORC_TEMPLATE, ref=9100, casts=8, icon=3049, unlock=9, mp=12, anim=THUNDER_ANIM,
          desc="Hurls a great bolt of lightning."),
-    dict(id=3922, old_id=4922, name="Thundaga", tmpl=SORC_TEMPLATE, ref=9200, casts=5, icon=3050, unlock=ONS, mp=12,
+    dict(id=3922, old_id=4922, name="Thundaga", tmpl=SORC_TEMPLATE, ref=9200, casts=5, icon=3050, unlock=ONS, mp=12, anim=THUNDER_ANIM,
          desc="Hurls a blinding spear of sunlight."),
     dict(id=3930, old_id=4930, name="Cure", tmpl=SORC_SELF_TEMPLATE, ref=1400, casts=3, icon=3037, unlock=11010901, mp="all",
          desc="Restores HP."),
@@ -284,6 +289,8 @@ def build_params(game, mod):
         m = copy_row(mg, s["tmpl"], s["id"], f"SoraSouls {s['name']}")
         m.ReferenceID, m.BaseCastCount, m.SpellIcon, m.SpellCategory = s["ref"], s["casts"], s["icon"], 0
         m.RequiredIntelligence = m.RequiredFaith = 0
+        if "anim" in s:
+            m.AnimationType = s["anim"]
         gd = copy_row(goods, SPELL_GOODS_TEMPLATE, s["id"], f"SoraSouls {s['name']}")
         gd.GoodIcon = s["icon"]
         gd.Spell = s["id"]  # links the spell item to its Magic row (v1-v3 bug: still pointed at the template's spell)
