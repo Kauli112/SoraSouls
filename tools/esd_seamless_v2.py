@@ -108,4 +108,4 @@ def build(src, out, esp_text, report=print, retarget_states=None):
 
 
 if __name__ == "__main__":
-    build(sys.argv[1], sys.argv[2], open(sys.argv[3]).read())
+    build(sys.argv[1], sys.argv[2], open(sys.argv[3], encoding="utf-8").read())

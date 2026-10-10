@@ -36,7 +36,8 @@ JUMP, FALL = 900, 1500
 # v33 Glide test, route 2: inside the jump animation the engine follows root y without gravity (v31 arc worked),
 # so the jump itself rises, then sinks slowly instead of landing. Jump off a ledge: does Sora drift down slowly
 # for the rest of the 2 s animation, then hand over to a normal fall?
-JUMP_GLIDE_TEST = True
+# Off since the DLL glide: the deployed c0000_a00_lo.anibnd.dcx has the plain v32 High Jump arc (rebuild check 2026-10-10).
+JUMP_GLIDE_TEST = False
 GLIDE_PEAK_FRAME = 14         # peak at ~0.47 s (vanilla arc peaked ~0.48 s)
 GLIDE_SINK = -1.5             # m/s after the peak (y crosses take-off height at ~1.5 s, ends ~0.8 m below)
 GLIDE_FORWARD = 2.0           # m/s extra forward drift after the peak (+3.1 m total)

@@ -73,7 +73,7 @@ def ladder_esd(vanilla_esd, esp_path, out):
     """Rebuilds the seamless-casting ESD (esd_seamless_v2, from VANILLA – its rewriter needs the vanilla layout) with
     the down-step -> slide retarget added in the same pass."""
     import esd_seamless_v2
-    stats = esd_seamless_v2.build(vanilla_esd, out, open(esp_path).read(),
+    stats = esd_seamless_v2.build(vanilla_esd, out, open(esp_path, encoding="utf-8").read(),
                                   retarget_states={s: SLIDE_STATE for s in DOWN_STEP_STATES})
     if not stats["retarget"]:
         raise RuntimeError("no ladder down-step transition found")
