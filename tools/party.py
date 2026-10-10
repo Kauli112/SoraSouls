@@ -38,7 +38,8 @@ TEMPLATES = {DONALD: dict(npc=6520, init=6520, ai=DONALD), GOOFY: dict(npc=6540,
 # sorceries in his CharaInit), Goofy = warrior bandit (battle 6802). Sight/hearing raised so they join fights.
 # Following is done by the DLL (catch-up placement when Sora gets more than a few metres away).
 THINK = {DONALD: 6804, GOOFY: 6802}
-DONALD_CASTER = 6804                                                     # CharaInitParam of the bandit he copies
+DONALD_INT = 16
+DONALD_CASTER = 6804                                                    # CharaInitParam of the bandit he copies
 DONALD_COPY = ("RightHandWeapon1", "RightHandWeapon2", "LeftHandWeapon1", "LeftHandWeapon2", "SpellSlot1",
                "SpellSlot2", "SpellSlot3", "SpellSlot4", "SpellSlot5", "SpellSlot6", "SpellSlot7",
                "Vitality", "Attunement", "Endurance",
@@ -176,6 +177,10 @@ def build_party_params(gp, get_param, copy_row, goods_template, heal_template):
             c.RightHandWeapon1 = c.RightHandWeapon2 = STAFF_WEAPON      # v111: KH2 Mage's Staff (catalyst stats)
             c.RightHandWeapon2 = STAFF_MELEE                               # v112: staff swing up close
             c.LeftHandWeapon1 = c.LeftHandWeapon2 = -1                     # v112: no leather shield
+            # v125 (playtest: "Donald's magic does way too much damage"): the bandit's INT 42 + Heavy Soul Arrow hit
+            # far harder than Sora early on. Soul Arrow only, INT 16 (Soul Arrow needs 10).
+            c.Intelligence = DONALD_INT
+            c.SpellSlot2 = -1
     trig = copy_row(sp, 97525, TRIGGER_SP, "SoraSouls party call trigger")          # drive trigger: invisible, 1 s
     h = copy_row(sp, heal_template, CURE_SP, "SoraSouls Donald Cure")
     h.HPPointsLost, h.HPReductionPercentage = 0, -CURE_PCT
