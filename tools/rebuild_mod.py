@@ -2,7 +2,8 @@
 
 Order confirmed 2026-10-10 by rebuilding from vanilla and comparing with the deployed v123 mod folder.
 Byte-identical: params, events, text, maps, scripts, the five chr files, WP_A_1309, menus, and (from model recipes)
-every Sora / Drive Form / Donald / Goofy part, the Kingdom Key model and Donald's staff / Goofy's shield.
+every Sora / Drive Form / Donald / Goofy part, the Kingdom Key model, the six extra Keyblades and Donald's staff /
+Goofy's shield.
 Findings that pinned the order down:
   * c0000.anibnd.dcx = cast_glow_tip -> ladder_fast. cast_from_weapon (v68 experiment) is NOT in the deployed build.
   * c0000_a00_md.anibnd.dcx = ladder_fast on the VANILLA md binder. swap_cast_arm is NOT in the deployed build.
@@ -10,8 +11,8 @@ Findings that pinned the order down:
   * c0000.esd.dcx = ladder_fast's esd_seamless_v2 pass on the vanilla ESD (+ StateMachine_1 ESP text).
   * Sora + forms = model_recipe replay of the four plain *_9550 parts -> drive_outfits.py (writes all 60 files).
   * Donald / Goofy = model_recipe replay -> textures from their PNGs -> sync_part_variants.py.
-Not rebuilt here: the six extra Keyblades (make_keyblades.py needs matplotlib + scikit-image), the DLL, the title
-video. The Kingdom Key texture is written from the KH2 artwork (v123 had Blender's darker conversion).
+Not rebuilt here: the DLL, the title video. The Kingdom Key texture is written from the KH2 artwork (v123 had
+Blender's darker conversion; user choice 2026-10-10: keep the true artwork). Needs matplotlib + scikit-image.
 
 Usage: python rebuild_mod.py <DSR game dir> <out mod dir> [--kh2 <export dir>] [--openkh <OpenKH data/kh2 dir>]
                              [--recipes <recipe dir>] [--compare <reference mod dir>]
@@ -19,7 +20,7 @@ Usage: python rebuild_mod.py <DSR game dir> <out mod dir> [--kh2 <export dir>] [
   --openkh  the player's OpenKH data/kh2 folder (obj/W_EX010.mdlx, remastered/itempic)
 The game folder is only read. Without --kh2/--openkh the KH2-based files are skipped.
 """
-import hashlib, os, subprocess, sys, tempfile
+import hashlib, os, shutil, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PARTS = ("HD_A", "BD_A", "AM_A", "LG_M")
@@ -81,6 +82,16 @@ def build_models(game, mod, kh2, openkh, recipes):
     run("model_recipe.py", "replay", recipes, "WP_A_0204", os.path.join(kh2, "keyblade", "W_EX010.fbx"), parts)
     run("model_recipe.py", "texture", os.path.join(parts, "WP_A_0204.partsbnd.dcx"),
         os.path.join(openkh, "obj", "W_EX010.mdlx"))
+    # the six extra Keyblades: FBX exports + texture sheets read from the .mdlx (OpenKH's export overwrites
+    # Texture0000.png for every Keyblade), built on the Kingdom Key binder
+    sys.path.insert(0, HERE)
+    from keyblades import KEYBLADES
+    with tempfile.TemporaryDirectory() as tmp:
+        for kb in KEYBLADES:
+            shutil.copy(os.path.join(kh2, "keyblade", kb["fbx"] + ".fbx"), tmp)
+            run("kh2_weapon_texture.py", os.path.join(openkh, "obj", kb["fbx"] + ".mdlx"),
+                os.path.join(tmp, kb["fbx"] + ".png"))
+        run("make_keyblades.py", tmp, os.path.join(parts, "WP_A_0204.partsbnd.dcx"), parts)
 
 
 def tidy(mod):

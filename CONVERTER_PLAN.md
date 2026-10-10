@@ -104,16 +104,16 @@ with a clear message if anything differs, instead of building a broken model.
    not in the shipped build (md binder = vanilla + ladder_fast; c0000.anibnd = cast_glow_tip + ladder_fast).
    Tools run on Python 3.13 + soulstruct 2.6.0 (`.venv`).
 2. **Done (2026-10-10):** `tools/model_recipe.py` (extract / replay / pngs / texture). With `--kh2 --openkh` the
-   rebuild matches 150 of 151 deployed files, including all 60 Sora/form parts, all 20 Donald/Goofy parts and the
-   Kingdom Key model, with no Blender. Recipes live in `work/recipes` (not in git, see open points).
+   rebuild matches 156 of 157 deployed files, including all 60 Sora/form parts, all 20 Donald/Goofy parts, the
+   Kingdom Key model and the six extra Keyblades, with no Blender. Recipes live in `work/recipes` (not in git, see open points).
    Only the Kingdom Key differs: its texture is now KH2's artwork (v123 had Blender's sRGB->linear copy, darker),
-   written by Pillow without mipmaps. Needs an in-game look.
+   written by Pillow without mipmaps (user choice 2026-10-10: keep the true artwork). Needs an in-game look.
    Open points before recipes can ship:
    * the templates still hold the KH2 triangle lists and our normals; with the export missing they give no
      positions, but normals + connectivity could in principle be integrated back into a rough shape;
    * Donald's/Goofy's head caps (from the DSR human head) are stored as absolute positions;
-   * the six extra Keyblades: `make_keyblades.py` needs matplotlib + scikit-image, and their per-Keyblade PNGs were
-     overwritten by later exports (use `kh2_weapon_texture.py` on the .mdlx files instead).
+   * the Keyblade texture sheets come from the player's .mdlx files (`kh2_weapon_texture.py`): OpenKH's FBX export
+     overwrites Texture0000.png for every Keyblade.
 2. Recipe extractor + replayer for Sora and the Kingdom Key; prove that the replay reproduces the deployed parts.
 3. `build_sorasouls.py` (one entry point) and the Windows package (embedded Python, wheels, .bat).
 4. Clean-up list above; new README (install, build, play, uninstall) and PLAYTEST.
