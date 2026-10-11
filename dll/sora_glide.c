@@ -511,11 +511,11 @@ static void sora_voice(int spell) {
    Until both are known (and for any cast whose start was missed) the line plays when the cast is counted, as before.
    Everything found is logged ("voice:") so a later build can use the offsets directly. */
 static u64 g_mod_lo, g_mod_hi;
-typedef struct { u16 o[3]; u8 d, in; u16 trans; } chain_t;
+typedef struct { u16 o[3]; u8 d, in; u16 trans; float age; } chain_t;   /* age: s since it last entered a cast animation */
 #define AC_MAX 4096
 static chain_t ac[AC_MAX]; static int ac_n, ac_casts, ac_lock = -1;
 static chain_t spc[256]; static int spc_n, spc_snap[256], spc_snap_ok, spc_lock = -1, spc_passes, spc_last_id;
-static float vs_t = 99.0f, vs_scan_t; static int vs_prev_anim, vs_id;
+static float vs_t = 99.0f, vs_scan_t, vs_watch; static int vs_prev_anim, vs_id, vs_pruned;
 static u64 g_att_lo;
 static int ptr_like(u64 p) { return p >= 0x10000 && p < 0x7FFFFFFFFFFFull && !(p & 7) && !(p >= g_mod_lo && p < g_mod_hi); }
 static int chain_val(u64 chr, const chain_t *c, int *v) {
@@ -525,7 +525,9 @@ static int chain_val(u64 chr, const chain_t *c, int *v) {
     if (!readable((void *)a, 4)) return 0;
     *v = *(volatile int *)a; return 1;
 }
-static int is_cast_anim(int v) { return v >= 6000 && v <= 6999; }
+/* v89 (v88 log: a field that changes all the time was taken): only Sora's own cast animations count – a00_62xx-65xx
+   with magic animation type 0 (Fire/Blizzard: Soul Arrow), 2 (Cure: self) or 19 (Thunder: Lightning Spear) */
+static int is_cast_anim(int v) { int h = v / 100, t = v % 100; return v > 0 && h >= 62 && h <= 65 && (t == 0 || t == 2 || t == 19); }
 static int m_anim(int v, u64 a, int arg) { (void)a; (void)arg; return is_cast_anim(v); }
 static int m_spell(int v, u64 a, int arg) { return v == arg && !(g_att_lo && a >= g_att_lo && a < g_att_lo + 0x100); }
 static int chain_scan(u64 chr, int (*m)(int, u64, int), int arg, chain_t *out, int max) {
@@ -552,25 +554,30 @@ static int chain_scan(u64 chr, int (*m)(int, u64, int), int arg, chain_t *out, i
 static void log_chain(const char *label, const chain_t *c) {
     logn(label, 0, c->d, c->o[0]); logn("        offsets 2/3 ", 0, c->o[1], c->o[2]);
 }
+/* v89: cast 1 collects the fields holding a cast animation; for 4 s they are watched and the ones that never leave it
+   (static data) are dropped; at a later cast the field that entered a cast animation 0.05-2.5 s before the cast was
+   counted (= when the animation started) is the current-animation field */
 static void anim_learn(u64 chr) {
     int i, k, v, best = -1;
     if (ac_casts == 0) {
         memset(ac, 0, sizeof ac); ac_n = chain_scan(chr, m_anim, 0, ac, AC_MAX);
-        for (i = 0; i < ac_n; i++) ac[i].in = 1;
+        for (i = 0; i < ac_n; i++) { ac[i].in = 1; ac[i].age = 0; }
         logi("voice: cast-animation candidates ", ac_n);
-    } else {
-        for (i = k = 0; i < ac_n; i++) if (chain_val(chr, &ac[i], &v) && is_cast_anim(v)) ac[k++] = ac[i];
-        ac_n = k; logi("voice: cast-animation candidates left ", ac_n);
+        ac_casts = ac_n ? 1 : 0; vs_watch = 4.0f; vs_pruned = 0;
+        return;
     }
-    ac_casts++;
-    if (ac_casts < 2) return;
     for (i = 0; i < ac_n; i++)
-        if (ac[i].trans && (best < 0 || ac[i].trans > ac[best].trans || (ac[i].trans == ac[best].trans && ac[i].d < ac[best].d))) best = i;
-    for (i = 0; i < ac_n && i < 12; i++) { log_chain("voice:   candidate depth/offset 1 ", &ac[i]); logi("        left the range x ", ac[i].trans); }
-    if (best >= 0) { ac_lock = best; log_chain("voice: current-animation field depth/offset 1 ", &ac[best]); vs_prev_anim = 0; chain_val(chr, &ac[best], &vs_prev_anim); }
-    else if (!ac_n) { ac_casts = 0; logs("voice: no animation field found - starting over\r\n"); }
-}
-static void spell_learn(u64 chr, int id) {
+        if (chain_val(chr, &ac[i], &v) && is_cast_anim(v) && ac[i].trans && ac[i].age >= 0.05f && ac[i].age <= 2.5f &&
+            (best < 0 || ac[i].d < ac[best].d || (ac[i].d == ac[best].d && ac[i].age > ac[best].age))) best = i;
+    for (i = k = 0; i < ac_n && k < 8; i++) if (ac[i].trans) {
+        k++; log_chain("voice:   candidate depth/offset 1 ", &ac[i]); logn("        left x / ms since entering ", 0, ac[i].trans, (int)(ac[i].age * 1000)); }
+    ac_casts++;
+    if (best >= 0) {
+        ac_lock = best; log_chain("voice: current-animation field depth/offset 1 ", &ac[best]);
+        vs_prev_anim = 0; chain_val(chr, &ac[best], &vs_prev_anim);
+    } else if (ac_casts > 4 || !ac_n) { ac_casts = 0; logs("voice: no animation field found - starting over\r\n"); }
+    else logi("voice: no field entered a cast animation before this cast, candidates ", ac_n);
+}static void spell_learn(u64 chr, int id) {
     int i, k;
     if (spc_lock >= 0) return;
     if (!spc_n) {
@@ -604,13 +611,27 @@ static void cast_start_tick(u64 chr, float dt) {
     int v, i;
     vs_t += dt;
     vs_scan_t -= dt;
-    if (ac_lock < 0 && ac_casts > 0 && vs_scan_t <= 0) {      /* which candidates leave the cast range between casts */
-        vs_scan_t = 0.1f;
-        for (i = 0; i < ac_n; i++) if (chain_val(chr, &ac[i], &v)) { int in = is_cast_anim(v); if (ac[i].in && !in) ac[i].trans++; ac[i].in = (u8)in; }
+    if (ac_lock < 0 && ac_casts > 0 && vs_scan_t <= 0) {      /* v89: watch the candidates every 20 ms */
+        float st = 0.02f - vs_scan_t; int k;
+        vs_scan_t = 0.02f;
+        for (i = 0; i < ac_n; i++) if (chain_val(chr, &ac[i], &v)) {
+            int in = is_cast_anim(v);
+            if (ac[i].in && !in) ac[i].trans++;
+            if (!ac[i].in && in) ac[i].age = 0; else ac[i].age += st;
+            ac[i].in = (u8)in;
+        }
+        if (vs_watch > 0) { vs_watch -= st; if (vs_watch <= 0 && !vs_pruned) {
+            for (i = k = 0; i < ac_n; i++) if (ac[i].trans) ac[k++] = ac[i];
+            ac_n = k; vs_pruned = 1; logi("voice: cast-animation candidates that changed ", ac_n);
+            if (!ac_n) { ac_casts = 0; logs("voice: none changed - scanning again at the next cast\r\n"); } } }
     }
     if (ac_lock < 0 || !chain_val(chr, &ac[ac_lock], &v)) return;
     if (v != vs_prev_anim && is_cast_anim(v)) {
-        int id = selected_spell(chr);
+        int id = selected_spell(chr), t = v % 100, j; u64 pgd = rd64(chr + OFF_PGD), blk = pgd ? rd64(pgd + OFF_ATTUNE) : 0;
+        /* v89: Thunder (type 19) and Cure (type 2) have their own animation – the family follows from it */
+        if ((t == 19 || t == 2) && blk && readable((void *)blk, 0x100))
+            for (j = 0, id = 0; j < 0x100; j += 8) { int s = *(volatile int *)(blk + j); if (mp_index(s) >= 0 && (s - 3900) / 10 == (t == 19 ? 2 : 3)) id = s; }
+        else if (t == 0 && id >= 3920) id = 0;
         for (i = 0; i < spc_n; i++) if (!chain_val(chr, &spc[i], &spc_snap[i])) spc_snap[i] = 0;
         spc_snap_ok = spc_n > 0;
         logn("voice: cast start, animation / spell ", 0, v, id);
@@ -637,6 +658,7 @@ static void mp_tick_inner(u64 chr, float dt, int fresh) {
     for (i = 0; i < n_s; i++) {
         int cur = *(volatile int *)(s_addr[i] + 4);
         if (cur > s_max[i]) { s_max[i] = cur; logn("mp: max learned ", s_addr[i], cur, cur); }
+        if (cur != s_prev[i]) logn("mp: count changed (slot, before -> now) ", s_addr[i], s_prev[i], cur);   /* v89: missed casts? */
         if (cur > s_prev[i]) {                      /* the game refilled it (bonfire rest) */
             if (mp_charging) { mp_charging = 0; set_flag(FLAG_MP_CHARGING, 0); logs("mp: refilled by the game (rest) - charge cancelled\r\n"); }
             s_prev[i] = cur;
@@ -1354,7 +1376,7 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v88 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
+    logs("SoraSouls glide v89 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));
