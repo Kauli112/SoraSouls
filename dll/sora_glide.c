@@ -516,7 +516,7 @@ typedef struct { u16 o[3]; u8 d, in; u16 trans; float age; } chain_t;   /* age: 
 #define AC_MAX 4096
 static chain_t ac[AC_MAX]; static int ac_n, ac_casts, ac_lock = -1;
 static chain_t spc[256]; static int spc_n, spc_snap[256], spc_snap_ok, spc_lock = -1, spc_passes, spc_last_id;
-static float vs_t = 99.0f, vs_scan_t, vs_watch, g_clock; static int vs_prev_anim, vs_id, vs_pruned;
+static float vs_t = 99.0f, vs_scan_t, vs_watch, g_clock; static int g_cast_held; static int vs_prev_anim, vs_id, vs_pruned;
 static u64 g_att_lo;
 static int ptr_like(u64 p) { return p >= 0x10000 && p < 0x7FFFFFFFFFFFull && !(p & 7) && !(p >= g_mod_lo && p < g_mod_hi); }
 static int chain_val(u64 chr, const chain_t *c, int *v) {
@@ -598,6 +598,8 @@ static void anim_learn(u64 chr) {
 }
 static int selected_spell(u64 chr) {
     int v, i, fam = -1, id = 0, other = 0; u64 pgd, blk;
+    { chain_t s; s.d = 3; s.o[0] = 0x18; s.o[1] = 0; s.o[2] = 0x264;   /* v94: the field v92 found in-game */
+      if (chain_val(chr, &s, &v) && mp_index(v) >= 0) return v; }
     if (spc_lock >= 0 && chain_val(chr, &spc[spc_lock], &v) && mp_index(v) >= 0) return v;
     pgd = rd64(chr + OFF_PGD); blk = pgd ? rd64(pgd + OFF_ATTUNE) : 0;
     if (!blk || !readable((void *)blk, 0x100)) return 0;
@@ -636,23 +638,23 @@ static void cast_start_tick(u64 chr, float dt) {
        it held the spell id at each cast start), when it still has MP. Each press, start and count is logged with a ms
        clock to measure the delays. */
     {
-        static int was; static float cool; int down = 0, k, id;
+        static float cool; int down = 0, k, id;
         if (cool > 0) cool -= dt;
         if (game_focused()) {
             if (g_xget) for (k = 0; k < 4; k++) { XSTATE st; memset(&st, 0, sizeof st); if (g_xget(k, &st) == 0 && (st.wButtons & 0x0100)) down = 1; }   /* LEFT_SHOULDER */
             if (GetAsyncKeyState(0x02) & 0x8000) down = 2;
         }
-        if (down && !was) {
+        if (down && !g_cast_held) {
             chain_t s; s.d = 3; s.o[0] = 0x18; s.o[1] = 0; s.o[2] = 0x264;
             id = 0;
             if (!chain_val(chr, &s, &id) || mp_index(id) < 0) id = 0;
             logn("voice: cast button (1 pad, 2 mouse) / spell, ms ", 0, down * 10000 + id, (int)(g_clock * 1000));
             if (id && !mp_charging && cool <= 0) {
                 for (k = 0; k < n_s; k++) if (*(volatile int *)s_addr[k] == id && *(volatile int *)(s_addr[k] + 4) > 0) break;
-                if (k < n_s) { sora_voice(id); vs_t = 0; vs_id = id; cool = 0.8f; }
+                if (k < n_s) { sora_voice(id); vs_t = 0; vs_id = id; cool = 0.25f; }   /* v94: was 0.8 s – fast casting lost lines */
             }
         }
-        was = down;
+        g_cast_held = down;
     }
     if (ac_lock < 0 || !chain_val(chr, &ac[ac_lock], &v)) return;
     if (v != vs_prev_anim && is_cast_anim(v)) {
@@ -664,7 +666,10 @@ static void cast_start_tick(u64 chr, float dt) {
         for (i = 0; i < spc_n; i++) if (!chain_val(chr, &spc[i], &spc_snap[i])) spc_snap[i] = 0;
         spc_snap_ok = spc_n > 0;
         logn("voice: animation field -> cast animation / ms ", 0, v, (int)(g_clock * 1000));
-        (void)id;
+        /* v94 (in-game v93: some casts got no line – the log showed casts with no button press before them: the
+           button was held from the previous cast): with the button held and no line for this cast yet, the line plays
+           when the cast animation shows up */
+        if (g_cast_held && vs_t > 1.0f && id && !mp_charging) { sora_voice(id); vs_t = 0; vs_id = id; logi("voice: line on held button, spell ", id); }
     }
     vs_prev_anim = v;
 }
@@ -1406,7 +1411,7 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v93 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
+    logs("SoraSouls glide v94 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));
