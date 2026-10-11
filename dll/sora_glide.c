@@ -494,8 +494,12 @@ static u8 *load_voice(int f) {             /* v83: whole WAV kept in memory – 
     CloseHandle(h);
     return g_voice[f];
 }
+/* v96 (in-game v95, user: "maybe we should scrap the spell lines?" – the press/animation/count signals could not time
+   queued casts reliably): spell lines off. Set to 1 to bring them back (v95 timing code kept). */
+#define SPELL_VOICES 0
 static void sora_voice(int spell) {
     int f = (spell - 3900) / 10; u8 *w;
+    if (!SPELL_VOICES) return;
     if (spell < 3900 || f < 0 || f > 3) return;
     w = load_voice(f);
     if (w) PlaySoundA((const char *)w, 0, 0x0001 | 0x0002 | 0x0004);   /* SND_ASYNC | SND_NODEFAULT | SND_MEMORY */
@@ -1433,7 +1437,7 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v95 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
+    logs("SoraSouls glide v96 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));
