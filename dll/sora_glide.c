@@ -516,7 +516,7 @@ typedef struct { u16 o[3]; u8 d, in; u16 trans; float age; } chain_t;   /* age: 
 #define AC_MAX 4096
 static chain_t ac[AC_MAX]; static int ac_n, ac_casts, ac_lock = -1;
 static chain_t spc[256]; static int spc_n, spc_snap[256], spc_snap_ok, spc_lock = -1, spc_passes, spc_last_id;
-static float vs_t = 99.0f, vs_scan_t, vs_watch, g_clock; static int g_cast_held; static int vs_prev_anim, vs_id, vs_pruned;
+static float vs_t = 99.0f, vs_scan_t, vs_watch, g_clock, vs_due = -1.0f; static int g_cast_held, vs_queued, vs_cur_anim; static int vs_prev_anim, vs_id, vs_pruned;
 static u64 g_att_lo;
 static int ptr_like(u64 p) { return p >= 0x10000 && p < 0x7FFFFFFFFFFFull && !(p & 7) && !(p >= g_mod_lo && p < g_mod_hi); }
 static int chain_val(u64 chr, const chain_t *c, int *v) {
@@ -649,14 +649,27 @@ static void cast_start_tick(u64 chr, float dt) {
             id = 0;
             if (!chain_val(chr, &s, &id) || mp_index(id) < 0) id = 0;
             logn("voice: cast button (1 pad, 2 mouse) / spell, ms ", 0, down * 10000 + id, (int)(g_clock * 1000));
-            if (id && !mp_charging && cool <= 0) {
+            /* v95 (in-game v94: "sometimes on time if I space them out, sometimes late"; log: a press during a cast is
+               queued by the game – that cast starts when the current one ends): a press while a cast animation is
+               running only marks the next cast as queued; its line is timed from the current cast (see cast_counted) */
+            if (ac_lock >= 0 && chain_val(chr, &ac[ac_lock], &v) && is_cast_anim(v)) { vs_queued = 1; logs("voice: press during a cast - queued\r\n"); }
+            else if (id && !mp_charging && cool <= 0) {
                 for (k = 0; k < n_s; k++) if (*(volatile int *)s_addr[k] == id && *(volatile int *)(s_addr[k] + 4) > 0) break;
                 if (k < n_s) { sora_voice(id); vs_t = 0; vs_id = id; cool = 0.25f; }   /* v94: was 0.8 s – fast casting lost lines */
             }
         }
         g_cast_held = down;
     }
+    if (vs_due >= 0) {                               /* v95: a queued cast's line, timed from the cast before it */
+        vs_due -= dt;
+        if (vs_due < 0) {
+            int id = selected_spell(chr), k;
+            for (k = 0; k < n_s; k++) if (*(volatile int *)s_addr[k] == id && *(volatile int *)(s_addr[k] + 4) > 0) break;
+            if (id && k < n_s && !mp_charging && vs_t > 0.6f) { sora_voice(id); vs_t = 0; vs_id = id; logn("voice: queued cast line, spell / ms ", 0, id, (int)(g_clock * 1000)); }
+        }
+    }
     if (ac_lock < 0 || !chain_val(chr, &ac[ac_lock], &v)) return;
+    if (is_cast_anim(v)) vs_cur_anim = v;
     if (v != vs_prev_anim && is_cast_anim(v)) {
         int id = selected_spell(chr), t = v % 100, j; u64 pgd = rd64(chr + OFF_PGD), blk = pgd ? rd64(pgd + OFF_ATTUNE) : 0;
         /* v89: Thunder (type 19) and Cure (type 2) have their own animation – the family follows from it */
@@ -669,7 +682,8 @@ static void cast_start_tick(u64 chr, float dt) {
         /* v94 (in-game v93: some casts got no line – the log showed casts with no button press before them: the
            button was held from the previous cast): with the button held and no line for this cast yet, the line plays
            when the cast animation shows up */
-        if (g_cast_held && vs_t > 1.0f && id && !mp_charging) { sora_voice(id); vs_t = 0; vs_id = id; logi("voice: line on held button, spell ", id); }
+        /* v95: any cast animation start without a line yet plays it (the start shows up ~15 ms after the press) */
+        if (vs_t > 0.6f && id && !mp_charging) { sora_voice(id); vs_t = 0; vs_id = id; vs_due = -1.0f; logi("voice: line at the animation start, spell ", id); }
     }
     vs_prev_anim = v;
 }
@@ -678,7 +692,15 @@ static void cast_counted(u64 chr, int id) {
     logn("voice: cast counted, spell / ms ", 0, id, (int)(g_clock * 1000));
     if (ac_lock < 0) anim_learn(chr); else spell_learn(chr, id);
     if (vs_t > 4.0f) { logn("voice: cast spell (line at the count) ", 0, id, 0); sora_voice(id); }
-    else if (vs_id != id) logn("voice: start line was for another spell, start/cast ", 0, vs_id, id);
+    /* v95: a cast queued during this one (press, or the button held) starts when this one can be cancelled: TAE of the
+       left-hand casts – release (event 64) at 0.4 / 0.3 / 0.667 s, cancel at 1.267 / 1.467 / 1.433 s (types 0 / 19 / 2) */
+    if (vs_queued || g_cast_held) {
+        int t = vs_cur_anim % 100;
+        vs_due = t == 19 ? 1.12f : t == 2 ? 0.72f : 0.82f;
+        logn("voice: next cast queued, line due in ms ", 0, vs_cur_anim, (int)(vs_due * 1000));
+    }
+    vs_queued = 0;
+    if (vs_t <= 4.0f && vs_id != id) logn("voice: start line was for another spell, start/cast ", 0, vs_id, id);
     vs_t = 99.0f;
 }static void mp_tick_inner(u64 chr, float dt, int fresh);
 static void mp_tick(u64 chr, float dt, int fresh) { mp_tick_inner(chr, dt, fresh); mp_publish(); }
@@ -1411,7 +1433,7 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v94 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
+    logs("SoraSouls glide v95 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));
