@@ -16,7 +16,7 @@ import glob, os, shutil, sys, zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-VERSION = "v127"
+VERSION = "v128"
 DLL = "sora_glide_v97.dll"
 SKIP_PACKAGES = ("pip",)
 
