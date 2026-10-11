@@ -32,7 +32,8 @@ OpenKH needs it. Download "**.NET Desktop Runtime 8**" for **Windows x64** from 
    folder (browse to it by hand if it isn't found).
 4. Go through the next screens (Panacea and Lua Backend are not needed for SoraSouls).
 5. On the last screen, **extract the game data**. This takes a long time. When it's done, the OpenKH folder has
-   `data\kh2\obj` (the KH2 models) and `data\kh2\remastered` (the HD pictures) – that is what SoraSouls needs.
+   `data\kh2\obj` (the KH2 models), `data\kh2\remastered` (the HD pictures) and `data\kh2\voice` (Sora's voice,
+   used for his death line) – that is what SoraSouls needs.
 
 You do **not** need to export any models yourself: the converter does that with your OpenKH.
 

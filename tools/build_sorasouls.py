@@ -128,7 +128,7 @@ def main(argv):
                 if k not in NOT_COMPARED and not k.endswith((".dll", ".log", ".txt")) and not k.startswith("movww/")}
         os.makedirs(os.path.dirname(EXPECTED), exist_ok=True)
         with open(EXPECTED, "w", encoding="utf-8") as f:
-            json.dump(dict(build="v126", files=data), f, indent=1, sort_keys=True)
+            json.dump(dict(build="v127", files=data), f, indent=1, sort_keys=True)
         print(f"wrote {EXPECTED}: {len(data)} files")
         return 0
 
