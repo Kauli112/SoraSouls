@@ -25,7 +25,7 @@ ROOT = os.path.dirname(HERE)
 SETTINGS = os.path.join(ROOT, "sorasouls_settings.json")
 EXPECTED = os.path.join(ROOT, "data", "expected_build.json")
 DSR_IMAGE_SIZE = 0x319B000          # DarkSoulsRemastered.exe the DLL's offsets were measured on
-DLL_NAME = "sora_glide_v97.dll"
+DLL_NAME = "sora_glide_v98.dll"
 FORMS = ("valor", "wisdom", "master", "final", "antiform")
 KEYBLADE_FBX = ("W_EX010", "W_EX010_30", "W_EX010_40", "W_EX010_M0", "W_EX010_10", "W_EX010_20", "W_EX010_N0")
 ITEMPIC = (43, 44, 45, 46, 47, 63, 64, 344)
@@ -128,7 +128,7 @@ def main(argv):
                 if k not in NOT_COMPARED and not k.endswith((".dll", ".log", ".txt")) and not k.startswith("movww/")}
         os.makedirs(os.path.dirname(EXPECTED), exist_ok=True)
         with open(EXPECTED, "w", encoding="utf-8") as f:
-            json.dump(dict(build="v128", files=data), f, indent=1, sort_keys=True)
+            json.dump(dict(build="v129", files=data), f, indent=1, sort_keys=True)
         print(f"wrote {EXPECTED}: {len(data)} files")
         return 0
 

@@ -1,0 +1,27 @@
+// SoraSouls add-on DLL – version information (v98). Shown in the file's Properties > Details; also lets antivirus
+// tools see what the file is (Nexus virus scan 2026-10-11: some engines flag unnamed DLLs by heuristics).
+1 VERSIONINFO
+FILEVERSION 0,98,0,0
+PRODUCTVERSION 1,28,0,0
+FILEOS 0x40004
+FILETYPE 0x2
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904B0"
+    BEGIN
+      VALUE "CompanyName", "SoraSouls (open source, https://github.com/Kauli112/SoraSouls)"
+      VALUE "FileDescription", "SoraSouls add-on for Dark Souls Remastered (HUD, abilities, party) loaded by Mod Engine 2"
+      VALUE "FileVersion", "0.98"
+      VALUE "InternalName", "sora_glide"
+      VALUE "LegalCopyright", "GPL-3.0"
+      VALUE "OriginalFilename", "sora_glide.dll"
+      VALUE "ProductName", "SoraSouls"
+      VALUE "ProductVersion", "1.28"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1200
+  END
+END

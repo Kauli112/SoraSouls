@@ -93,7 +93,7 @@ IMPORT i64 WINAPI DefWindowProcA(void *, u32, u64, i64);
 IMPORT BOOL WINAPI SetLayeredWindowAttributes(void *, u32, u8, u32);
 IMPORT BOOL WINAPI SetWindowPos(void *, void *, int, int, int, int, u32);
 IMPORT BOOL WINAPI ShowWindow(void *, int);
-IMPORT BOOL WINAPI PlaySoundA(const char *, void *, u32);   /* winmm – v82 Sora's KH2 cast voices */
+
 IMPORT BOOL WINAPI PeekMessageA(void *, void *, u32, u32, u32);
 IMPORT BOOL WINAPI TranslateMessage(const void *);
 IMPORT i64 WINAPI DispatchMessageA(const void *);
@@ -140,7 +140,9 @@ static int g_running, g_run_before, g_rise_bad; static float g_hs, g_snap_t;
 #define VK_F10 0x79
 #define VK_F11 0x7A
 #define PROBE 0                 /* v44 research probe (read-only) – done */
-#define PROBE_PGD 1             /* v45: log changes of PlayerGameData small ints (to confirm souls) – off for release */
+#define PROBE_PGD 0             /* v45: log changes of PlayerGameData small ints (to confirm souls) – off for release */
+/* v96: Sora's KH2 spell lines – off (could not be timed reliably); v98: their code is not built while off */
+#define SPELL_VOICES 0
 #define MP_CHARGE_S       20.0f
 #define DRIVE_FULL        100.0f
 #define DRIVE_DAMAGE      100.0f  /* gauge points for losing one full HP bar */
@@ -470,6 +472,9 @@ static void mp_publish(void) {
     g_charge_frac = mp_charging ? 1.0f - mp_timer / MP_CHARGE_S : 0.0f;
     g_mp_frac = n_s ? (float)*(volatile int *)(s_addr[0] + 4) / (float)s_max[0] : -1.0f;
 }
+static u64 g_mod_lo, g_mod_hi;
+#if SPELL_VOICES
+IMPORT BOOL WINAPI PlaySoundA(const char *, void *, u32);   /* winmm – v82 Sora's KH2 cast voices (link winmm.lib) */
 /* v82 (user: "add [Sora's KH2 voice for] fire blizzard and thunder ... to the casting"): when a Sora spell is cast,
    play Sora's own KH2 line for its family from mod\sora_voice\*.wav (written by the converter from the player's KH2
    voice files). Played through Windows (PlaySound), so it ignores the game's volume slider. */
@@ -494,9 +499,6 @@ static u8 *load_voice(int f) {             /* v83: whole WAV kept in memory – 
     CloseHandle(h);
     return g_voice[f];
 }
-/* v96 (in-game v95, user: "maybe we should scrap the spell lines?" – the press/animation/count signals could not time
-   queued casts reliably): spell lines off. Set to 1 to bring them back (v95 timing code kept). */
-#define SPELL_VOICES 0
 static void sora_voice(int spell) {
     int f = (spell - 3900) / 10; u8 *w;
     if (!SPELL_VOICES) return;
@@ -515,7 +517,6 @@ static void sora_voice(int spell) {
         spells), or simply the only spell family attuned (the start kit has only Fire)
    Until both are known (and for any cast whose start was missed) the line plays when the cast is counted, as before.
    Everything found is logged ("voice:") so a later build can use the offsets directly. */
-static u64 g_mod_lo, g_mod_hi;
 typedef struct { u16 o[3]; u8 d, in; u16 trans; float age; } chain_t;   /* age: s since it last entered a cast animation */
 #define AC_MAX 4096
 static chain_t ac[AC_MAX]; static int ac_n, ac_casts, ac_lock = -1;
@@ -706,7 +707,14 @@ static void cast_counted(u64 chr, int id) {
     vs_queued = 0;
     if (vs_t <= 4.0f && vs_id != id) logn("voice: start line was for another spell, start/cast ", 0, vs_id, id);
     vs_t = 99.0f;
-}static void mp_tick_inner(u64 chr, float dt, int fresh);
+}
+#else
+/* v98 (Nexus virus scan: 5/71 engines flagged the DLL by heuristics): with the spell lines off, their code – sound
+   playback from memory and the pointer-chasing memory search that learned the animation field – is not built */
+static void cast_counted(u64 chr, int id) { (void)chr; (void)id; }
+static void cast_start_tick(u64 chr, float dt) { (void)chr; (void)dt; }
+#endif
+static void mp_tick_inner(u64 chr, float dt, int fresh);
 static void mp_tick(u64 chr, float dt, int fresh) { mp_tick_inner(chr, dt, fresh); mp_publish(); }
 static void mp_tick_inner(u64 chr, float dt, int fresh) {
     u64 pgd = chr ? rd64(chr + OFF_PGD) : 0; int i, cast = -1;
@@ -1439,7 +1447,7 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v97 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
+    logs("SoraSouls glide v98 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));
