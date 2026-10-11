@@ -130,7 +130,8 @@ static const float JUMP_MULT[4]  = { 1.0f, 1.0f, 1.82f, 2.64f };
 #define JUMP_RISE         4.5f    /* m/s: the modded jump starts at ~7 m/s; stairs/lifts stay below */
 #define JUMP_MIN_RUN      2.0f    /* v80/v81: m/s horizontal before the rise – a jump comes from a run; the ladder get-off
                                      (v80 still boosted once in-game: it moves sideways while it rises) does not */
-static int g_running, g_run_before;
+static int g_running, g_run_before, g_rise_bad; static float g_hs, g_snap_t;
+#define JUMP_MAX          12.0f   /* v91: m/s – the modded jump starts at ~7 m/s; ladder snaps were 45-86 */
 #define JUMP_HOLD_S       0.025f  /* must rise that fast for this long (>= 2 ticks) before boosting */
 #define FLAG_GLIDE1       9820
 #define FLAG_JUMP2        9823
@@ -1376,7 +1377,7 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v90 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
+    logs("SoraSouls glide v91 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));
@@ -1480,7 +1481,8 @@ static u32 WINAPI worker(void *arg) {
             float x = *(volatile float *)(pos + OFF_POS_X), z = *(volatile float *)(pos + OFF_POS_Z), hs;
             if (!have_prev) { prev_y = y; prev_x = x; prev_z = z; have_prev = 1; continue; }
             hs = ((x - prev_x) * (x - prev_x) + (z - prev_z) * (z - prev_z)) / (dt * dt);
-            warp_mode = hs < STILL_SPEED * STILL_SPEED;          /* squared speeds */
+            warp_mode = hs < STILL_SPEED * STILL_SPEED;
+            g_hs = hs;          /* squared speeds */
             {   /* v81: horizontal speed averaged over ~0.3 s, judged when a fast rise STARTS */
                 static float ema;
                 float a = dt / 0.3f; if (a > 1) a = 1;
@@ -1494,7 +1496,17 @@ static u32 WINAPI worker(void *arg) {
             prev_x = x; prev_z = z;
         }
         vy = (y - prev_y) / dt;
-        if (vy > JUMP_RISE) rise_t += dt; else rise_t = 0;
+        {   /* v91 (v90 log: the ladder teleport ticks rose 45-86 m/s, up to 8 m in one tick, with "running" set – getting
+               on a ladder snaps Sora sideways onto it): a jump starts from the ground (rise from < 1.5 m/s) and never
+               rises faster than JUMP_MAX m/s; any rise that breaks either rule gets no boost until it ends */
+            static float last_vy;
+            if (vy > JUMP_RISE) { if (rise_t == 0) g_rise_bad = last_vy > 1.5f; rise_t += dt; if (vy > JUMP_MAX) g_rise_bad = 1; }
+            else { rise_t = 0; g_rise_bad = 0; }
+            last_vy = vy;
+            /* and no boost for 0.5 s after any snap (sideways faster than 12 m/s, or 0.6 m+ up/down in one tick) */
+            if (g_hs > JUMP_MAX * JUMP_MAX || y - prev_y > 0.6f || y - prev_y < -0.6f) g_snap_t = 0.5f; else if (g_snap_t > 0) g_snap_t -= dt;
+            if (g_snap_t > 0) g_rise_bad = 1;
+        }
         {   /* v90 (in-game v87-v89: ladder teleport still there, no boost logged): log every sudden height change and
                every fast rise, with what the add-on did that tick, to see whether the game or the add-on moves him */
             static int big_n, rise_n; static float rise_log;
@@ -1509,9 +1521,9 @@ static u32 WINAPI worker(void *arg) {
         /* v80 (playtest: "the ladder still teleports me up when climbing" – Undead Parish, also at normal climb speed):
            the ladder get-off move at the top rises faster than JUMP_RISE, so the High Jump boost multiplied it. The boost
            now needs horizontal movement too – DS1 jumps only from a run; ladders and lifts go straight up. */
-        if (!gliding && rise_t >= JUMP_HOLD_S && jump_lv > 1 && g_running) {   /* High Jump LV2/MAX: add the extra share of the climb */
+        if (!gliding && rise_t >= JUMP_HOLD_S && jump_lv > 1 && g_running && !g_rise_bad) {   /* High Jump LV2/MAX: add the extra share of the climb */
             float boosted = prev_y + (y - prev_y) * JUMP_MULT[jump_lv];
-            { static float last_log = 1.0f; last_log += dt; if (last_log > 1.0f) { logf1("high jump boost, rise speed ", vy); last_log = 0; } }
+            { static float boost_rise = -1.0f; if (rise_t < boost_rise || boost_rise < 0) logf1("high jump boost (one line per jump), rise speed ", vy); boost_rise = rise_t; }
             *py = boosted; y = boosted;
         }
 
