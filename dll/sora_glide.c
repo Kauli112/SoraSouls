@@ -1376,7 +1376,7 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v89 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
+    logs("SoraSouls glide v90 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));
@@ -1495,6 +1495,16 @@ static u32 WINAPI worker(void *arg) {
         }
         vy = (y - prev_y) / dt;
         if (vy > JUMP_RISE) rise_t += dt; else rise_t = 0;
+        {   /* v90 (in-game v87-v89: ladder teleport still there, no boost logged): log every sudden height change and
+               every fast rise, with what the add-on did that tick, to see whether the game or the add-on moves him */
+            static int big_n, rise_n; static float rise_log;
+            float dy = y - prev_y;
+            if ((dy > 0.6f || dy < -3.0f) && big_n < 40) { big_n++; logf1("height jump in one tick (m) ", dy); logf1("        at y ", y);
+                logn("        gliding / jump lv / running ", 0, gliding * 10 + jump_lv, g_running * 10 + g_run_before); }
+            rise_log += dt;
+            if (vy > JUMP_RISE && rise_log > 0.5f && rise_n < 200) { rise_n++; rise_log = 0; logf1("fast rise (m/s) ", vy);
+                logn("        jump lv / running now / ran before ", 0, jump_lv, g_running * 10 + g_run_before); }
+        }
 
         /* v80 (playtest: "the ladder still teleports me up when climbing" – Undead Parish, also at normal climb speed):
            the ladder get-off move at the top rises faster than JUMP_RISE, so the High Jump boost multiplied it. The boost
