@@ -33,3 +33,6 @@ data/expected_build.json.tmp
 
 # model recipes (our data; checked to hold no usable KH2/DSR geometry - CONVERTER_PLAN.md)
 !data/recipes/*.dcx
+
+# third-party installers
+*.exe
