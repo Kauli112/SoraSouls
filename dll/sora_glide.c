@@ -130,7 +130,7 @@ static const float JUMP_MULT[4]  = { 1.0f, 1.0f, 1.82f, 2.64f };
 #define JUMP_RISE         4.5f    /* m/s: the modded jump starts at ~7 m/s; stairs/lifts stay below */
 #define JUMP_MIN_RUN      2.0f    /* v80/v81: m/s horizontal before the rise – a jump comes from a run; the ladder get-off
                                      (v80 still boosted once in-game: it moves sideways while it rises) does not */
-static int g_running;
+static int g_running, g_run_before;
 #define JUMP_HOLD_S       0.025f  /* must rise that fast for this long (>= 2 ticks) before boosting */
 #define FLAG_GLIDE1       9820
 #define FLAG_JUMP2        9823
@@ -1254,7 +1254,7 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v86 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
+    logs("SoraSouls glide v87 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));
@@ -1362,7 +1362,11 @@ static u32 WINAPI worker(void *arg) {
                 static float ema;
                 float a = dt / 0.3f; if (a > 1) a = 1;
                 ema += a * (fsqrt(hs) - ema);
-                if (rise_t == 0) g_running = ema > JUMP_MIN_RUN;
+                /* v87 (in-game: still teleported; with the add-on off it was gone): running INTO a ladder kept v81's
+                   averaged speed high while the climb started. Now both: running before the rise AND moving
+                   sideways now – a jump does both, getting on (straight up) or off (no run before) a ladder not */
+                if (rise_t == 0) g_run_before = ema > JUMP_MIN_RUN;
+                g_running = g_run_before && hs > JUMP_MIN_RUN * JUMP_MIN_RUN;
             }
             prev_x = x; prev_z = z;
         }
@@ -1374,7 +1378,7 @@ static u32 WINAPI worker(void *arg) {
            now needs horizontal movement too – DS1 jumps only from a run; ladders and lifts go straight up. */
         if (!gliding && rise_t >= JUMP_HOLD_S && jump_lv > 1 && g_running) {   /* High Jump LV2/MAX: add the extra share of the climb */
             float boosted = prev_y + (y - prev_y) * JUMP_MULT[jump_lv];
-            if (rise_t < JUMP_HOLD_S + dt) logf1("high jump boost, rise speed ", vy);
+            { static float last_log = 1.0f; last_log += dt; if (last_log > 1.0f) { logf1("high jump boost, rise speed ", vy); last_log = 0; } }
             *py = boosted; y = boosted;
         }
 
