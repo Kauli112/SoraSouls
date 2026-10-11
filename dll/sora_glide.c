@@ -516,7 +516,7 @@ typedef struct { u16 o[3]; u8 d, in; u16 trans; float age; } chain_t;   /* age: 
 #define AC_MAX 4096
 static chain_t ac[AC_MAX]; static int ac_n, ac_casts, ac_lock = -1;
 static chain_t spc[256]; static int spc_n, spc_snap[256], spc_snap_ok, spc_lock = -1, spc_passes, spc_last_id;
-static float vs_t = 99.0f, vs_scan_t, vs_watch; static int vs_prev_anim, vs_id, vs_pruned;
+static float vs_t = 99.0f, vs_scan_t, vs_watch, g_clock; static int vs_prev_anim, vs_id, vs_pruned;
 static u64 g_att_lo;
 static int ptr_like(u64 p) { return p >= 0x10000 && p < 0x7FFFFFFFFFFFull && !(p & 7) && !(p >= g_mod_lo && p < g_mod_hi); }
 static int chain_val(u64 chr, const chain_t *c, int *v) {
@@ -614,7 +614,7 @@ static void cast_start_tick(u64 chr, float dt) {
        counted cast – the count comes that late): used directly from the first cast */
     if (ac_lock < 0) { memset(ac, 0, sizeof ac); ac[0].d = 3; ac[0].o[0] = 0x68; ac[0].o[1] = 0x48; ac[0].o[2] = 0x80; ac_n = 1; ac_lock = 0;
                        vs_prev_anim = 0; chain_val(chr, &ac[0], &vs_prev_anim); }
-    vs_t += dt;
+    vs_t += dt; g_clock += dt;
     vs_scan_t -= dt;
     if (ac_lock < 0 && ac_casts > 0 && vs_scan_t <= 0) {      /* v89: watch the candidates every 20 ms */
         float st = 0.02f - vs_scan_t; int k;
@@ -630,6 +630,30 @@ static void cast_start_tick(u64 chr, float dt) {
             ac_n = k; vs_pruned = 1; logi("voice: cast-animation candidates that changed ", ac_n);
             if (!ac_n) { ac_casts = 0; logs("voice: none changed - scanning again at the next cast\r\n"); } } }
     }
+    /* v93 (in-game v92: "the spell lines come out late still"; log: the animation field changed only around the
+       count): the line now starts on the button press itself – L1 / LB (the cast button with the Keyblade focus in
+       the left hand) or the right mouse button – for the selected spell ([[ChrIns+0x18]+0]+0x264, found by v92 in-game:
+       it held the spell id at each cast start), when it still has MP. Each press, start and count is logged with a ms
+       clock to measure the delays. */
+    {
+        static int was; static float cool; int down = 0, k, id;
+        if (cool > 0) cool -= dt;
+        if (game_focused()) {
+            if (g_xget) for (k = 0; k < 4; k++) { XSTATE st; memset(&st, 0, sizeof st); if (g_xget(k, &st) == 0 && (st.wButtons & 0x0100)) down = 1; }   /* LEFT_SHOULDER */
+            if (GetAsyncKeyState(0x02) & 0x8000) down = 2;
+        }
+        if (down && !was) {
+            chain_t s; s.d = 3; s.o[0] = 0x18; s.o[1] = 0; s.o[2] = 0x264;
+            id = 0;
+            if (!chain_val(chr, &s, &id) || mp_index(id) < 0) id = 0;
+            logn("voice: cast button (1 pad, 2 mouse) / spell, ms ", 0, down * 10000 + id, (int)(g_clock * 1000));
+            if (id && !mp_charging && cool <= 0) {
+                for (k = 0; k < n_s; k++) if (*(volatile int *)s_addr[k] == id && *(volatile int *)(s_addr[k] + 4) > 0) break;
+                if (k < n_s) { sora_voice(id); vs_t = 0; vs_id = id; cool = 0.8f; }
+            }
+        }
+        was = down;
+    }
     if (ac_lock < 0 || !chain_val(chr, &ac[ac_lock], &v)) return;
     if (v != vs_prev_anim && is_cast_anim(v)) {
         int id = selected_spell(chr), t = v % 100, j; u64 pgd = rd64(chr + OFF_PGD), blk = pgd ? rd64(pgd + OFF_ATTUNE) : 0;
@@ -639,13 +663,14 @@ static void cast_start_tick(u64 chr, float dt) {
         else if (t == 0 && id >= 3920) id = 0;
         for (i = 0; i < spc_n; i++) if (!chain_val(chr, &spc[i], &spc_snap[i])) spc_snap[i] = 0;
         spc_snap_ok = spc_n > 0;
-        logn("voice: cast start, animation / spell ", 0, v, id);
-        if (id && !mp_charging) { sora_voice(id); vs_t = 0; vs_id = id; }
+        logn("voice: animation field -> cast animation / ms ", 0, v, (int)(g_clock * 1000));
+        (void)id;
     }
     vs_prev_anim = v;
 }
 /* called by the MP tick when a cast is counted */
 static void cast_counted(u64 chr, int id) {
+    logn("voice: cast counted, spell / ms ", 0, id, (int)(g_clock * 1000));
     if (ac_lock < 0) anim_learn(chr); else spell_learn(chr, id);
     if (vs_t > 4.0f) { logn("voice: cast spell (line at the count) ", 0, id, 0); sora_voice(id); }
     else if (vs_id != id) logn("voice: start line was for another spell, start/cast ", 0, vs_id, id);
@@ -1381,7 +1406,7 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v92 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
+    logs("SoraSouls glide v93 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));
