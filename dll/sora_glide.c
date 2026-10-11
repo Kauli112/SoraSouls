@@ -499,31 +499,132 @@ static void sora_voice(int spell) {
     w = load_voice(f);
     if (w) PlaySoundA((const char *)w, 0, 0x0001 | 0x0002 | 0x0004);   /* SND_ASYNC | SND_NODEFAULT | SND_MEMORY */
 }
-/* v83 (in-game v82: "the spell sounds come out late"): checked every worker tick (10 ms) instead of with the 0.1 s
-   MP tick – a cast is seen the moment its use is counted */
-static int vc_prev[16], vc_n = -1; static float vc_cool;
-/* v83 (in-game v82: Sora's death voice did not play – another scream did): also played by the add-on when Sora's
-   HP reaches 0 (the sound-bank swap may not be loaded by Mod Engine) */
-static void voice_tick(u64 chr, float dt) {
-    int i, best = -1, best_drop = 0;
-    (void)chr;
-    if (vc_cool > 0) vc_cool -= dt;
-    /* v85 (in-game v84: "first spell plays correctly", later ones "weird"): the cast spell is the one whose count
-       fell this tick (largest drop if several); counts are re-read whenever the slot list changes; every voice is
-       logged with the spell id */
-    if (n_s != vc_n) { for (i = 0; i < n_s && i < 16; i++) vc_prev[i] = *(volatile int *)(s_addr[i] + 4); vc_n = n_s; return; }
-    for (i = 0; i < n_s && i < 16; i++) {
-        int cur = *(volatile int *)(s_addr[i] + 4), drop = vc_prev[i] - cur;
-        if (drop > best_drop) { best_drop = drop; best = i; }
-        vc_prev[i] = cur;
-    }
-    if (best >= 0 && !mp_charging && vc_cool <= 0) {
-        int id = *(volatile int *)s_addr[best];
-        logn("voice: cast spell / drop ", s_addr[best], id, best_drop);
-        sora_voice(id); vc_cool = 1.0f;
-    }
+/* v88 (in-game v87: the lines came "at random times"; user: play them "at the start of cast animation"): the MP tick
+   only sees a cast when the game counts its use, part-way through the animation. No offset for the player's current
+   animation is known for this exe, so the add-on learns it from the first casts:
+     1. at the first cast it scans Sora's ChrIns and the structures it points to (two levels) for int32 values 6000-6999
+        (DS1 cast animations are a00_6xxx); at the next cast the fields that still hold a cast animation stay, and
+        the one that also left that range between casts (most often) is taken as "current animation"
+     2. from then on, when that field changes to a 6xxx animation, Sora's line plays at once for the selected spell:
+        found the same way (a field that holds the cast spell's id at the animation start, tested with two different
+        spells), or simply the only spell family attuned (the start kit has only Fire)
+   Until both are known (and for any cast whose start was missed) the line plays when the cast is counted, as before.
+   Everything found is logged ("voice:") so a later build can use the offsets directly. */
+static u64 g_mod_lo, g_mod_hi;
+typedef struct { u16 o[3]; u8 d, in; u16 trans; } chain_t;
+#define AC_MAX 4096
+static chain_t ac[AC_MAX]; static int ac_n, ac_casts, ac_lock = -1;
+static chain_t spc[256]; static int spc_n, spc_snap[256], spc_snap_ok, spc_lock = -1, spc_passes, spc_last_id;
+static float vs_t = 99.0f, vs_scan_t; static int vs_prev_anim, vs_id;
+static u64 g_att_lo;
+static int ptr_like(u64 p) { return p >= 0x10000 && p < 0x7FFFFFFFFFFFull && !(p & 7) && !(p >= g_mod_lo && p < g_mod_hi); }
+static int chain_val(u64 chr, const chain_t *c, int *v) {
+    u64 a = chr; int i;
+    for (i = 0; i < c->d - 1; i++) { a = rd64(a + c->o[i]); if (!ptr_like(a)) return 0; }
+    a += c->o[c->d - 1];
+    if (!readable((void *)a, 4)) return 0;
+    *v = *(volatile int *)a; return 1;
 }
-static void mp_tick_inner(u64 chr, float dt, int fresh);
+static int is_cast_anim(int v) { return v >= 6000 && v <= 6999; }
+static int m_anim(int v, u64 a, int arg) { (void)a; (void)arg; return is_cast_anim(v); }
+static int m_spell(int v, u64 a, int arg) { return v == arg && !(g_att_lo && a >= g_att_lo && a < g_att_lo + 0x100); }
+static int chain_scan(u64 chr, int (*m)(int, u64, int), int arg, chain_t *out, int max) {
+    int n = 0, o1, o2, o3, top = readable((void *)chr, 0x1000) ? 0x1000 : readable((void *)chr, 0x800) ? 0x800 : 0;
+    for (o1 = 0; o1 < top && n < max; o1 += 4) {
+        u64 p;
+        if (m(*(volatile int *)(chr + o1), chr + o1, arg)) { out[n].d = 1; out[n].o[0] = (u16)o1; n++; }
+        if (o1 & 7) continue;
+        p = *(volatile u64 *)(chr + o1);
+        if (!ptr_like(p) || !readable((void *)p, 0x400)) continue;
+        for (o2 = 0; o2 < 0x400 && n < max; o2 += 4) {
+            u64 q;
+            if (m(*(volatile int *)(p + o2), p + o2, arg)) { out[n].d = 2; out[n].o[0] = (u16)o1; out[n].o[1] = (u16)o2; n++; }
+            if (o2 & 7) continue;
+            q = *(volatile u64 *)(p + o2);
+            if (!ptr_like(q) || !readable((void *)q, 0x400)) continue;
+            for (o3 = 0; o3 < 0x400 && n < max; o3 += 4)
+                if (m(*(volatile int *)(q + o3), q + o3, arg)) {
+                    out[n].d = 3; out[n].o[0] = (u16)o1; out[n].o[1] = (u16)o2; out[n].o[2] = (u16)o3; n++; }
+        }
+    }
+    return n;
+}
+static void log_chain(const char *label, const chain_t *c) {
+    logn(label, 0, c->d, c->o[0]); logn("        offsets 2/3 ", 0, c->o[1], c->o[2]);
+}
+static void anim_learn(u64 chr) {
+    int i, k, v, best = -1;
+    if (ac_casts == 0) {
+        memset(ac, 0, sizeof ac); ac_n = chain_scan(chr, m_anim, 0, ac, AC_MAX);
+        for (i = 0; i < ac_n; i++) ac[i].in = 1;
+        logi("voice: cast-animation candidates ", ac_n);
+    } else {
+        for (i = k = 0; i < ac_n; i++) if (chain_val(chr, &ac[i], &v) && is_cast_anim(v)) ac[k++] = ac[i];
+        ac_n = k; logi("voice: cast-animation candidates left ", ac_n);
+    }
+    ac_casts++;
+    if (ac_casts < 2) return;
+    for (i = 0; i < ac_n; i++)
+        if (ac[i].trans && (best < 0 || ac[i].trans > ac[best].trans || (ac[i].trans == ac[best].trans && ac[i].d < ac[best].d))) best = i;
+    for (i = 0; i < ac_n && i < 12; i++) { log_chain("voice:   candidate depth/offset 1 ", &ac[i]); logi("        left the range x ", ac[i].trans); }
+    if (best >= 0) { ac_lock = best; log_chain("voice: current-animation field depth/offset 1 ", &ac[best]); vs_prev_anim = 0; chain_val(chr, &ac[best], &vs_prev_anim); }
+    else if (!ac_n) { ac_casts = 0; logs("voice: no animation field found - starting over\r\n"); }
+}
+static void spell_learn(u64 chr, int id) {
+    int i, k;
+    if (spc_lock >= 0) return;
+    if (!spc_n) {
+        u64 pgd = rd64(chr + OFF_PGD); g_att_lo = pgd ? rd64(pgd + OFF_ATTUNE) : 0;
+        memset(spc, 0, sizeof spc); spc_n = chain_scan(chr, m_spell, id, spc, 256); spc_snap_ok = 0; spc_passes = 0; spc_last_id = id;
+        logi("voice: selected-spell candidates ", spc_n);
+        return;
+    }
+    if (!spc_snap_ok) return;                         /* this cast's start was not seen */
+    for (i = k = 0; i < spc_n; i++) if (spc_snap[i] == id) spc[k++] = spc[i];
+    spc_n = k; spc_snap_ok = 0;
+    if (id != spc_last_id) spc_passes++;
+    spc_last_id = id;
+    logn("voice: selected-spell candidates left / tests with another spell ", 0, spc_n, spc_passes);
+    if (spc_n && spc_passes) { spc_lock = 0; log_chain("voice: selected-spell field depth/offset 1 ", &spc[0]); }
+    else if (!spc_n) logs("voice: no selected-spell field - will scan again\r\n");
+}
+static int selected_spell(u64 chr) {
+    int v, i, fam = -1, id = 0, other = 0; u64 pgd, blk;
+    if (spc_lock >= 0 && chain_val(chr, &spc[spc_lock], &v) && mp_index(v) >= 0) return v;
+    pgd = rd64(chr + OFF_PGD); blk = pgd ? rd64(pgd + OFF_ATTUNE) : 0;
+    if (!blk || !readable((void *)blk, 0x100)) return 0;
+    for (i = 0; i < 0x100; i += 8) {                 /* only one spell family attuned: that one */
+        int s = *(volatile int *)(blk + i);
+        if (mp_index(s) >= 0) { if (fam >= 0 && (s - 3900) / 10 != fam) return 0; fam = (s - 3900) / 10; id = s; }
+        else if (s >= 3000 && s < 6000) other = 1;
+    }
+    return other ? 0 : id;
+}
+static void cast_start_tick(u64 chr, float dt) {
+    int v, i;
+    vs_t += dt;
+    vs_scan_t -= dt;
+    if (ac_lock < 0 && ac_casts > 0 && vs_scan_t <= 0) {      /* which candidates leave the cast range between casts */
+        vs_scan_t = 0.1f;
+        for (i = 0; i < ac_n; i++) if (chain_val(chr, &ac[i], &v)) { int in = is_cast_anim(v); if (ac[i].in && !in) ac[i].trans++; ac[i].in = (u8)in; }
+    }
+    if (ac_lock < 0 || !chain_val(chr, &ac[ac_lock], &v)) return;
+    if (v != vs_prev_anim && is_cast_anim(v)) {
+        int id = selected_spell(chr);
+        for (i = 0; i < spc_n; i++) if (!chain_val(chr, &spc[i], &spc_snap[i])) spc_snap[i] = 0;
+        spc_snap_ok = spc_n > 0;
+        logn("voice: cast start, animation / spell ", 0, v, id);
+        if (id && !mp_charging) { sora_voice(id); vs_t = 0; vs_id = id; }
+    }
+    vs_prev_anim = v;
+}
+/* called by the MP tick when a cast is counted */
+static void cast_counted(u64 chr, int id) {
+    if (ac_lock < 0) anim_learn(chr); else spell_learn(chr, id);
+    if (vs_t > 2.5f) { logn("voice: cast spell (line at the count) ", 0, id, 0); sora_voice(id); }
+    else if (vs_id != id) logn("voice: start line was for another spell, start/cast ", 0, vs_id, id);
+    vs_t = 99.0f;
+}static void mp_tick_inner(u64 chr, float dt, int fresh);
 static void mp_tick(u64 chr, float dt, int fresh) { mp_tick_inner(chr, dt, fresh); mp_publish(); }
 static void mp_tick_inner(u64 chr, float dt, int fresh) {
     u64 pgd = chr ? rd64(chr + OFF_PGD) : 0; int i, cast = -1;
@@ -558,8 +659,8 @@ static void mp_tick_inner(u64 chr, float dt, int fresh) {
         /* v86 (in-game v85: after the first spell no line played): the voice goes with the MP tick's own cast detection
            again (it saw every cast in the log; the separate 10 ms check missed them); lines play from memory (v83),
            which was the real delay in v82 */
-        logn("voice: cast spell ", s_addr[cast], *(volatile int *)s_addr[cast], 0);
-        sora_voice(*(volatile int *)s_addr[cast]);
+        cast_counted(chr, *(volatile int *)s_addr[cast]);
+
         for (i = 0; i < n_s; i++) {
             int v;
             if (i == cast) { s_prev[i] = s_cure[cast] ? 0 : cur; if (s_cure[cast]) *(volatile int *)(s_addr[i] + 4) = 0; continue; }
@@ -847,7 +948,6 @@ static void form_tick(u64 chr) {
 #define MAXE 384
 #define SCAN_S 8.0f
 #define HIT_RANGE 12.0f
-static u64 g_mod_lo, g_mod_hi;
 static u64 sc_addr[MAXE]; static int sc_n; static volatile int g_scan_ready;      /* scanner -> worker hand-over */
 static u64 e_addr[MAXE], e_vt[MAXE]; static int e_hp[MAXE], e_n; static float e_cool[MAXE];
 static volatile u64 g_player;
@@ -1254,7 +1354,7 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v87 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
+    logs("SoraSouls glide v88 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));
@@ -1307,6 +1407,7 @@ static u32 WINAPI worker(void *arg) {
             f9_was = f9; f10_was = f10;
         }
         g_live = 1;
+        cast_start_tick(chr, dt);
         md_t -= dt;
         if (md_t <= 0) { md_t = 0.1f; mp_tick(chr, 0.1f, md_fresh); drive_tick(chr, md_fresh); hits_tick(chr, 0.1f); party_tick(chr, 0.1f); form_tick(chr); drive_items_tick(); md_fresh = 0; }
         hf_t -= dt;
