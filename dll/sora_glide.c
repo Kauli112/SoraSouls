@@ -610,6 +610,10 @@ static int selected_spell(u64 chr) {
 }
 static void cast_start_tick(u64 chr, float dt) {
     int v, i;
+    /* v92 (v90 in-game log: one field, [[ChrIns+0x68]+0x48]+0x80, entered the cast animation 0.4-2.7 s before every
+       counted cast – the count comes that late): used directly from the first cast */
+    if (ac_lock < 0) { memset(ac, 0, sizeof ac); ac[0].d = 3; ac[0].o[0] = 0x68; ac[0].o[1] = 0x48; ac[0].o[2] = 0x80; ac_n = 1; ac_lock = 0;
+                       vs_prev_anim = 0; chain_val(chr, &ac[0], &vs_prev_anim); }
     vs_t += dt;
     vs_scan_t -= dt;
     if (ac_lock < 0 && ac_casts > 0 && vs_scan_t <= 0) {      /* v89: watch the candidates every 20 ms */
@@ -643,7 +647,7 @@ static void cast_start_tick(u64 chr, float dt) {
 /* called by the MP tick when a cast is counted */
 static void cast_counted(u64 chr, int id) {
     if (ac_lock < 0) anim_learn(chr); else spell_learn(chr, id);
-    if (vs_t > 2.5f) { logn("voice: cast spell (line at the count) ", 0, id, 0); sora_voice(id); }
+    if (vs_t > 4.0f) { logn("voice: cast spell (line at the count) ", 0, id, 0); sora_voice(id); }
     else if (vs_id != id) logn("voice: start line was for another spell, start/cast ", 0, vs_id, id);
     vs_t = 99.0f;
 }static void mp_tick_inner(u64 chr, float dt, int fresh);
@@ -1377,7 +1381,7 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v91 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
+    logs("SoraSouls glide v92 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));
