@@ -628,10 +628,42 @@ def build_text(game, mod):
                                         HUD_MSG_FLAGS, menu_edits["Event_text_.fmg"], abil,
                                         extra_msgs=({party.DEBUG_FLAG: party.DEBUG_TEXT, **party.DEBUG_STEPS} if party.PARTY_DEBUG else {}))
         print("wrote", os.path.normpath(hdr))
+    upgrade_names(os.path.join(game, "msg/ENGLISH/item.msgbnd.dcx"), item_edits)
     return [edit_fmgs(os.path.join(game, "msg/ENGLISH/item.msgbnd.dcx"),
                       os.path.join(mod, "msg/ENGLISH/item.msgbnd.dcx"), item_edits),
             edit_fmgs(os.path.join(game, "msg/ENGLISH/menu.msgbnd.dcx"),
                       os.path.join(mod, "msg/ENGLISH/menu.msgbnd.dcx"), menu_edits)]
+
+
+def upgrade_names(item_bnd, item_edits, template=201000, template_name="Longsword"):
+    """v128 (playtest: upgrading a weapon with Andre shows "?WeaponName? <id>"): Dark Souls looks every upgrade and
+    infusion up as its own weapon id (Longsword 201000, "Longsword+1" 201001, "Crystal Longsword+1" 201101 ...), so
+    each SoraSouls weapon name gets the same set of entries, worded like the Longsword's. Descriptions likewise."""
+    vanilla = {}
+    for e in Binder.from_path(item_bnd).entries:
+        stem = e.name.split("\\")[-1]
+        if stem in ("Weapon_name_.fmg", "Weapon_description_.fmg", "Weapon_long_desc_.fmg"):
+            vanilla[stem] = FMG.from_bytes(bytes(e.data)).entries
+    names = vanilla["Weapon_name_.fmg"]
+    offs = sorted(i - template for i in names if template < i < template + 1000)
+    added = 0
+    for fmg_name in ("Weapon_name_.fmg", "Weapon_description_.fmg", "Weapon_long_desc_.fmg"):
+        van, edits = vanilla[fmg_name], item_edits.setdefault(fmg_name, {})
+        for wid, text in list(edits.items()):
+            if wid % 1000:
+                continue
+            base_old = van.get(wid)
+            for d in offs:
+                if wid + d in edits:
+                    continue
+                if fmg_name != "Weapon_name_.fmg":
+                    if template + d in van:
+                        edits[wid + d] = text; added += 1
+                elif base_old and van.get(wid + d):          # renamed vanilla weapon: keep its own wording
+                    edits[wid + d] = van[wid + d].replace(base_old, text); added += 1
+                elif wid + d not in van:
+                    edits[wid + d] = names[template + d].replace(template_name, text); added += 1
+    print(f"upgrade/infusion text entries added: {added}")
 
 
 if __name__ == "__main__":

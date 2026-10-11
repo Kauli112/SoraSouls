@@ -83,6 +83,9 @@ def build_models(game, mod, kh2, openkh, recipes):
             run("model_recipe.py", "replay", recipes, f"{p}_{model}", os.path.join(kh2, who, fbx + ".fbx"), parts, game)
             run("model_recipe.py", "pngs", os.path.join(parts, f"{p}_{model}.partsbnd.dcx"), os.path.join(kh2, who))
     run("sync_part_variants.py", parts, parts, *(m for _, m, _ in PARTY))
+    # v128: off the vanilla model ids (9570 is Havel's armor) – the recipes keep the old names
+    for (_, old, _), new in zip(PARTY, ("9557", "9558")):
+        run("rename_parts_model.py", parts, old, new)
     # v126: Roxas (Sora's look while Hollow), fitted with Sora's own fit (tools/roxas_model.py)
     with tempfile.TemporaryDirectory() as tmp:
         skel = os.path.join(tmp, "skeleton.json")

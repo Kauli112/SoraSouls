@@ -893,7 +893,9 @@ static u32 WINAPI hud_thread(void *arg) {
         wh = msg_h + (int)(H * 0.062f);
         ptop = 0;
         if (g_panel) { ptop = (int)(H * 0.52f); wh += ptop; wx = (int)(W * 0.60f); ww = (int)(W * 0.995f) - wx; }
-        wy = (int)(H * (1.0f - 0.128f)) - wh;
+        /* v97 (playtest: "the hud blocks the amount of souls added"): the souls-gained number pops up right above the souls
+           counter, where the bars sat – the HUD now sits higher, clear of it */
+        wy = (int)(H * (1.0f - 0.178f)) - wh;
         SetWindowPos(hwnd, (void *)-1, o.x + wx, o.y + wy, ww, wh, 0x10 | 0x40);
         shown = 1;
         if (H != last_h || !font) {
@@ -1437,7 +1439,7 @@ static u32 WINAPI worker(void *arg) {
     while (n > 0 && path[n - 1] != '\\' && path[n - 1] != '/') n--;
     { const char *f = "sora_glide.log"; int i = 0; while (f[i]) { path[n + i] = f[i]; i++; } path[n + i] = 0; }
     g_log = CreateFileA(path, 0x40000000, 1, 0, 2, 0x80, 0);   /* GENERIC_WRITE, share read, CREATE_ALWAYS */
-    logs("SoraSouls glide v96 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
+    logs("SoraSouls glide v97 (MP Charge + Drive gauge + HUD + abilities + party msgs; HUD hides while loading; Roxas while Hollow) started\r\n");
 
     Sleep(5000);                                       /* let the game finish unpacking/initialising */
     logx("module base ", (u64)GetModuleHandleA(0));
@@ -1588,7 +1590,16 @@ static u32 WINAPI worker(void *arg) {
         }
 
         if (!gliding) {
-            if (glide_lv > 0 && vy < FALL_TRIGGER && glide_button(xget)) {
+            /* v97 (playtest v96: "running down stairs activates glide"): sprinting holds the glide button and stair
+               steps drop faster than FALL_TRIGGER for a tick or two. A glide now needs a real fall: 0.15 s+ of falling
+               with a fresh press of the button, or 0.5 s+ with it held */
+            static float fall_t; static int btn_was, fresh;
+            int btn = glide_button(xget);
+            if (vy < FALL_TRIGGER) fall_t += dt; else { fall_t = 0; fresh = 0; }
+            if (btn && !btn_was && fall_t > 0) fresh = 1;
+            btn_was = btn;
+            if (glide_lv > 0 && btn && ((fresh && fall_t >= 0.15f) || fall_t >= 0.5f)) {
+                fall_t = 0; fresh = 0;
                 gliding = 1; still = 0;
                 *flags |= FLAG_NOGRAVITY;
                 logf1("glide start, fall speed ", vy);

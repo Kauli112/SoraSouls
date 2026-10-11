@@ -45,7 +45,9 @@ DONALD_COPY = ("RightHandWeapon1", "RightHandWeapon2", "LeftHandWeapon1", "LeftH
                "SpellSlot2", "SpellSlot3", "SpellSlot4", "SpellSlot5", "SpellSlot6", "SpellSlot7",
                "Vitality", "Attunement", "Endurance",
                "Strength", "Dexterity", "Intelligence", "Faith", "Resistance", "Humanity")
-MODEL = {DONALD: 9560, GOOFY: 9570}                  # armor part model ids (HD_A_9560.partsbnd.dcx, ...)
+# v128 (playtest: "Havel is showing Goofy"): 9560 / 9570 are vanilla armor models (9570 = Havel's set), so the built
+# parts are moved to unused ids 9557 / 9558 (tools/rename_parts_model.py, run by rebuild_mod.py)
+MODEL = {DONALD: 9557, GOOFY: 9558}                  # armor part model ids (HD_A_9557.partsbnd.dcx, ...)
 ARMOR_BASE = {DONALD: 9560000, GOOFY: 9570000}
 # v105: off – in-game v104 the helmet face scale squashed the KH2 heads (the helmet) and left the human face as it was
 FACE_SCALE = {}       # EquipParamProtector rows (+0/1000/2000/3000 head/body/arms/legs)
